@@ -59,27 +59,55 @@ class OrderController extends Controller
         
         if (empty($cart)) {
             return redirect()->route('cart.index')
-                           ->with('error', 'Seu carrinho está vazio.');
+                        ->with('error', 'Seu carrinho está vazio.');
         }
         
         DB::beginTransaction();
         
         try {
-            $totalAmount = 0;
+            $subtotal = 0;
             
-            // Calcular valor total
+            // Calcular subtotal
             foreach ($cart as $item) {
                 $product = Product::findOrFail($item['product_id']);
-                $totalAmount += $product->price * $item['quantity'];
+                $subtotal += $product->price * $item['quantity'];
             }
+
+            // Verificar se há cupom aplicado
+            $couponData = session('coupon');
+            $discount = 0;
+            $coupon = null;
             
+            if ($couponData) {
+                $coupon = \App\Models\Coupon::find($couponData['id']);
+                
+                // Verificar se o cupom ainda é válido
+                if ($coupon && $coupon->canBeUsedBy(auth()->id())) {
+                    $discount = $coupon->calculateDiscount($subtotal);
+                } else {
+                    // Cupom inválido, remover da sessão
+                    session()->forget('coupon');
+                    throw new \Exception('O cupom aplicado não é mais válido.');
+                }
+            }
+
+            $totalAmount = $subtotal - $discount;
+
             // Criar o pedido
             $order = new Order();
             $order->user_id = auth()->id();
+            $order->subtotal = $subtotal;
+            $order->coupon_discount = $discount;
             $order->total_amount = $totalAmount;
             $order->status = 'pending';
             $order->payment_method = $request->payment_method;
             $order->shipping_address = $request->shipping_address;
+            
+            // Salvar informações do cupom se aplicado
+            if ($coupon && $discount > 0) {
+                $order->coupon_id = $coupon->id;
+                $order->coupon_code = $coupon->code;
+            }
             
             // Armazenar informações do cartão de forma segura (ou apenas uma referência)
             // Em um sistema real, você não deve armazenar dados completos do cartão
@@ -102,6 +130,19 @@ class OrderController extends Controller
             }
             
             $order->save();
+
+            // Se houver cupom, registrar o uso
+            if ($coupon && $discount > 0) {
+                \App\Models\CouponUsage::create([
+                    'coupon_id' => $coupon->id,
+                    'user_id' => auth()->id(),
+                    'order_id' => $order->id,
+                    'discount_amount' => $discount,
+                ]);
+
+                // Incrementar contador de uso do cupom
+                $coupon->increment('used_count');
+            }
             
             // Criar os itens do pedido
             foreach ($cart as $item) {
@@ -125,18 +166,18 @@ class OrderController extends Controller
                 $orderItem->save();
             }
             
-            // Limpar carrinho
-            Session::forget('cart');
+            // Limpar carrinho e cupom
+            Session::forget(['cart', 'coupon']);
             
             DB::commit();
             
             return redirect()->route('orders.show', $order)
-                           ->with('success', 'Pedido realizado com sucesso!');
+                        ->with('success', 'Pedido realizado com sucesso!');
+                        
         } catch (\Exception $e) {
-            DB::rollBack();
-            
+            DB::rollback();
             return redirect()->route('cart.index')
-                           ->with('error', 'Erro ao processar o pedido: ' . $e->getMessage());
+                        ->with('error', $e->getMessage());
         }
     }
 }

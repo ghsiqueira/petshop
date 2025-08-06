@@ -47,7 +47,7 @@
                                 <a class="nav-link" href="{{ route('register') }}">Cadastro</a>
                             </li>
                         @else
-                            <!-- Lista de Desejos - NOVO -->
+                            <!-- Lista de Desejos -->
                             <li class="nav-item">
                                 <a class="nav-link position-relative {{ request()->routeIs('wishlist.*') ? 'active' : '' }}" href="{{ route('wishlist.index') }}">
                                     <i class="fas fa-heart text-danger"></i>
@@ -118,6 +118,11 @@
                                             <i class="fas fa-store me-2"></i>Área do Pet Shop
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('coupons.index') }}">
+                                            <i class="fas fa-tags me-2"></i>Cupons
+                                        </a>
+                                    </li>
                                     @endrole
                                     
                                     @role('employee')
@@ -134,6 +139,11 @@
                                     <li>
                                         <a class="dropdown-item" href="{{ route('admin.users.index') }}">
                                             <i class="fas fa-user-shield me-2"></i>Área Admin
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('coupons.index') }}">
+                                            <i class="fas fa-tags me-2"></i>Cupons
                                         </a>
                                     </li>
                                     @endrole

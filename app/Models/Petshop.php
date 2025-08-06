@@ -32,4 +32,9 @@ class Petshop extends Model
     {
         return $this->hasMany(Service::class);
     }
+
+    public function coupons()
+    {
+        return $this->hasMany(Coupon::class);
+    }
 }

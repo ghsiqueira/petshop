@@ -68,4 +68,19 @@ class User extends Authenticatable
     {
         return $this->wishlists()->where('product_id', $productId)->exists();
     }
+
+    public function createdCoupons()
+    {
+        return $this->hasMany(Coupon::class, 'created_by');
+    }
+
+    public function couponUsages()
+    {
+        return $this->hasMany(CouponUsage::class);
+    }
+
+    public function usedCoupons()
+    {
+        return $this->belongsToMany(Coupon::class, 'coupon_usages')->withPivot('discount_amount', 'order_id')->withTimestamps();
+    }
 }
