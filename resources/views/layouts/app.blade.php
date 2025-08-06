@@ -13,8 +13,7 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     @yield('styles')
 </head>
-<body>
-    <body data-route-name="{{ Route::currentRouteName() }}">
+<body data-route-name="{{ Route::currentRouteName() }}">
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
@@ -35,6 +34,9 @@
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('petshops.*') ? 'active' : '' }}" href="{{ route('petshops.index') }}">Pet Shops</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}" href="{{ route('services.index') }}">Serviços</a>
+                        </li>
                     </ul>
                     <ul class="navbar-nav">
                         @guest
@@ -45,18 +47,37 @@
                                 <a class="nav-link" href="{{ route('register') }}">Cadastro</a>
                             </li>
                         @else
+                            <!-- Lista de Desejos - NOVO -->
                             <li class="nav-item">
-                                <a class="nav-link position-relative" href="{{ route('cart.index') }}">
+                                <a class="nav-link position-relative {{ request()->routeIs('wishlist.*') ? 'active' : '' }}" href="{{ route('wishlist.index') }}">
+                                    <i class="fas fa-heart text-danger"></i>
+                                    <span class="d-none d-lg-inline ms-1">Lista de Desejos</span>
+                                    @if(auth()->user()->wishlists()->count() > 0)
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                                              id="wishlist-counter" style="font-size: 0.65rem;">
+                                            {{ auth()->user()->wishlists()->count() }}
+                                        </span>
+                                    @endif
+                                </a>
+                            </li>
+                            
+                            <!-- Carrinho -->
+                            <li class="nav-item">
+                                <a class="nav-link position-relative {{ request()->routeIs('cart.*') ? 'active' : '' }}" href="{{ route('cart.index') }}">
                                     <i class="fas fa-shopping-cart"></i>
+                                    <span class="d-none d-lg-inline ms-1">Carrinho</span>
                                     @if(session()->has('cart') && count(session('cart')) > 0)
-                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" style="font-size: 0.65rem;">
                                             {{ count(session('cart')) }}
                                         </span>
                                     @endif
                                 </a>
                             </li>
+                            
+                            <!-- Menu do Usuário -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user me-1"></i>
                                     {{ Auth::user()->name }}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
@@ -72,14 +93,15 @@
                                     </li>
                                     
                                     @role('client')
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('pets.index') }}">
-                                            <i class="fas fa-dog me-2"></i>Meus Pets
+                                            <i class="fas fa-paw me-2"></i>Meus Pets
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('appointments.index') }}">
-                                            <i class="fas fa-calendar-alt me-2"></i>Agendamentos
+                                            <i class="fas fa-calendar me-2"></i>Agendamentos
                                         </a>
                                     </li>
                                     <li>
@@ -90,14 +112,16 @@
                                     @endrole
                                     
                                     @role('petshop')
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('petshop.dashboard') }}">
-                                            <i class="fas fa-store me-2"></i>Gerenciar Petshop
+                                            <i class="fas fa-store me-2"></i>Área do Pet Shop
                                         </a>
                                     </li>
                                     @endrole
                                     
                                     @role('employee')
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('employee.dashboard') }}">
                                             <i class="fas fa-id-card me-2"></i>Área do Funcionário
@@ -106,6 +130,7 @@
                                     @endrole
                                     
                                     @role('admin')
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <a class="dropdown-item" href="{{ route('admin.users.index') }}">
                                             <i class="fas fa-user-shield me-2"></i>Área Admin
@@ -164,6 +189,9 @@
                         <li><a href="{{ route('home') }}" class="text-white">Início</a></li>
                         <li><a href="{{ route('products.index') }}" class="text-white">Produtos</a></li>
                         <li><a href="{{ route('petshops.index') }}" class="text-white">Pet Shops</a></li>
+                        @auth
+                            <li><a href="{{ route('wishlist.index') }}" class="text-white">Lista de Desejos</a></li>
+                        @endauth
                     </ul>
                 </div>
                 <div class="col-md-4">

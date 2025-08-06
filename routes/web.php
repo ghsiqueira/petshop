@@ -14,6 +14,7 @@ use App\Http\Controllers\PetshopController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeManagementController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -54,6 +55,12 @@ Route::middleware(['auth'])->group(function () {
     // Perfil
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    
+    // Lista de desejos (wishlist) - NOVA SEÇÃO
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/{product}', [WishlistController::class, 'store'])->name('wishlist.store');
+    Route::delete('/wishlist/{product}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+    Route::post('/wishlist/{product}/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     
     // Rotas para clientes
     Route::middleware(['role:client'])->group(function () {
@@ -101,7 +108,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/petshop/services/{service}', [ServiceController::class, 'show'])->name('petshop.services.show');
         Route::patch('/petshop/services/{service}/toggle-status', [ServiceController::class, 'toggleStatus'])->name('petshop.services.toggle-status');
 
-        // Funcionários - Mudar esta linha no arquivo web.php
+        // Funcionários
         Route::resource('petshop/employees', EmployeeManagementController::class)->names('petshop.employees');
 
         // Pedidos
@@ -122,5 +129,29 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('permissions', PermissionController::class);
             Route::resource('petshops', AdminPetshopController::class);
         });
+    });
+});
+
+// APIs para buscar serviços e funcionários (para agendamentos)
+Route::middleware('auth')->group(function () {
+    Route::get('/api/petshops/{petshop}/services', function($petshopId) {
+        $services = \App\Models\Service::where('petshop_id', $petshopId)
+                                      ->where('is_active', true)
+                                      ->select('id', 'name', 'price', 'duration')
+                                      ->get();
+        return response()->json($services);
+    });
+    
+    Route::get('/api/petshops/{petshop}/employees', function($petshopId) {
+        $employees = \App\Models\Employee::where('petshop_id', $petshopId)
+                                        ->with('user:id,name')
+                                        ->get()
+                                        ->map(function($employee) {
+                                            return [
+                                                'id' => $employee->id,
+                                                'name' => $employee->user->name
+                                            ];
+                                        });
+        return response()->json($employees);
     });
 });

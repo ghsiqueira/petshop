@@ -27,4 +27,20 @@ class Product extends Model
     {
         return $this->morphMany(Review::class, 'reviewable');
     }
+
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function wishlistedBy()
+    {
+        return $this->belongsToMany(User::class, 'wishlists');
+    }
+
+    // Método para contar quantas vezes foi favoritado
+    public function wishlistCount()
+    {
+        return $this->wishlists()->count();
+    }
 }

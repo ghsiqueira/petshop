@@ -52,4 +52,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Review::class);
     }
+
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function wishlistProducts()
+    {
+        return $this->belongsToMany(Product::class, 'wishlists');
+    }
+
+    // Método helper para verificar se um produto está na wishlist
+    public function hasInWishlist($productId)
+    {
+        return $this->wishlists()->where('product_id', $productId)->exists();
+    }
 }
