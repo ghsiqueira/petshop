@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PetController;
 use App\Http\Controllers\ProductController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PetshopController as AdminPetshopController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -50,7 +52,7 @@ Auth::routes();
 
 // Rotas para usuários autenticados
 Route::middleware(['auth'])->group(function () {
-    // Dashboard
+    // Dashboard principal (redireciona para o dashboard específico do papel)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Perfil
@@ -66,6 +68,28 @@ Route::middleware(['auth'])->group(function () {
     // Rotas de cupom no carrinho
     Route::post('/cart/coupon/apply', [CartController::class, 'applyCoupon'])->name('cart.coupon.apply');
     Route::delete('/cart/coupon/remove', [CartController::class, 'removeCoupon'])->name('cart.coupon.remove');
+    
+    // ==================== ROTAS DE ANALYTICS ====================
+    
+    // Dashboard Analytics para Petshop
+    Route::middleware(['role:petshop'])->group(function () {
+        Route::get('/analytics/petshop', [AnalyticsController::class, 'petshopDashboard'])->name('analytics.petshop');
+    });
+    
+    // Dashboard Analytics para Funcionário
+    Route::middleware(['role:employee'])->group(function () {
+        Route::get('/analytics/employee', [AnalyticsController::class, 'employeeDashboard'])->name('analytics.employee');
+    });
+    
+    // Dashboard Analytics para Cliente
+    Route::middleware(['role:client'])->group(function () {
+        Route::get('/analytics/client', [AnalyticsController::class, 'clientDashboard'])->name('analytics.client');
+    });
+    
+    // API endpoints para dados de gráficos (todos os usuários autenticados)
+    Route::get('/analytics/chart-data/{type}', [AnalyticsController::class, 'chartData'])->name('analytics.chart-data');
+    
+    // ==================== FIM ROTAS ANALYTICS ====================
     
     // Rotas de cupons para admin e petshop
     Route::middleware(['role:admin|petshop'])->group(function () {
@@ -98,7 +122,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Rotas para petshops
     Route::middleware(['role:petshop'])->group(function () {
-        // Dashboard
+        // Dashboard antigo (fallback)
         Route::get('/petshop/dashboard', [PetshopController::class, 'dashboard'])->name('petshop.dashboard');
         
         // Produtos
@@ -135,6 +159,10 @@ Route::middleware(['auth'])->group(function () {
     // Rotas para admin
     Route::middleware(['role:admin'])->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
+            // Dashboard administrativo avançado
+            Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+            
+            // Recursos de administração
             Route::resource('users', UserController::class);
             Route::resource('roles', RoleController::class);
             Route::resource('permissions', PermissionController::class);
@@ -148,7 +176,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/petshops/{petshop}/services', function($petshopId) {
         $services = \App\Models\Service::where('petshop_id', $petshopId)
                                       ->where('is_active', true)
-                                      ->select('id', 'name', 'price', 'duration')
+                                      ->select('id', 'name', 'price', 'duration_minutes')
                                       ->get();
         return response()->json($services);
     });

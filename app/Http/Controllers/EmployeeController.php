@@ -12,38 +12,44 @@ class EmployeeController extends Controller
         $this->middleware('auth');
         $this->middleware('role:employee');
     }
-    
-    public function appointments()
-    {
-        $employee = auth()->user()->employee;
-        
-        $today = now()->format('Y-m-d');
-        $appointments = Appointment::where('employee_id', $employee->id)
-                                 ->whereDate('appointment_datetime', '>=', $today)
-                                 ->with(['pet', 'service', 'user'])
-                                 ->orderBy('appointment_datetime')
-                                 ->paginate(10);
-        
-        return view('employee.appointments', compact('appointments'));
-    }
-    
+
     public function dashboard()
     {
+        // Redirecionar para o novo dashboard analytics
+        return redirect()->route('analytics.employee');
+    }
+
+    public function appointments(Request $request)
+    {
         $employee = auth()->user()->employee;
         
-        $todayAppointments = Appointment::where('employee_id', $employee->id)
-                                      ->whereDate('appointment_datetime', now()->format('Y-m-d'))
-                                      ->with(['pet', 'service', 'user'])
-                                      ->orderBy('appointment_datetime')
-                                      ->get();
-        
-        $upcomingAppointments = Appointment::where('employee_id', $employee->id)
-                                         ->whereDate('appointment_datetime', '>', now()->format('Y-m-d'))
-                                         ->where('status', '!=', 'cancelled')
-                                         ->orderBy('appointment_datetime')
-                                         ->take(5)
-                                         ->get();
-        
-        return view('employee.dashboard', compact('employee', 'todayAppointments', 'upcomingAppointments'));
+        if (!$employee) {
+            return redirect()->route('home')->with('error', 'Funcionário não encontrado.');
+        }
+
+        $query = Appointment::where('employee_id', $employee->id)
+            ->with(['pet', 'service', 'user']);
+
+        // Aplicar filtros
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('appointment_datetime', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('appointment_datetime', '<=', $request->date_to);
+        }
+
+        // Se não há filtro de data, mostrar apenas agendamentos futuros e recentes (últimos 30 dias)
+        if (!$request->filled('date_from') && !$request->filled('date_to')) {
+            $query->where('appointment_datetime', '>=', now()->subDays(30));
+        }
+
+        $appointments = $query->orderBy('appointment_datetime', 'desc')->paginate(15);
+
+        return view('employee.appointments', compact('appointments'));
     }
 }

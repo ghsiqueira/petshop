@@ -10,8 +10,22 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'petshop_id', 'name', 'description', 'price', 'stock', 'image', 'is_active'
+        'petshop_id',
+        'name',
+        'description',
+        'price',
+        'category',  // <- ADICIONAR ESTA LINHA
+        'stock',
+        'image',
+        'is_active',
     ];
+
+    // Adicione também este cast se não existir
+    protected $casts = [
+        'price' => 'decimal:2',
+        'is_active' => 'boolean',
+    ];
+
 
     public function petshop()
     {

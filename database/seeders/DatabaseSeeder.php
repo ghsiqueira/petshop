@@ -22,7 +22,11 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             ServiceSeeder::class,
             ProductSeeder::class,
+            ExtraProductSeeder::class,
             PetSeeder::class,
+            CouponSeeder::class,        
+            OrderSeeder::class,        
+            ReviewSeeder::class,        
             AppointmentSeeder::class,
         ]);
     }
