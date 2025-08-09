@@ -54,8 +54,9 @@ class AnalyticsController extends Controller
             ->where('status', 'delivered')
             ->sum('total_amount');
 
-        $growthPercentage = $previousMonth > 0 ? 
-            (($monthlyRevenue - $previousMonth) / $previousMonth) * 100 : 100;
+        $growthPercentage = $previousMonth > 0 ?
+            (($monthlyRevenue - $previousMonth) / $previousMonth) * 100 : 
+            ($monthlyRevenue > 0 ? 100 : 0);
 
         // Produtos mais vendidos (últimos 30 dias)
         $topProducts = OrderItem::whereHas('order', function ($query) use ($lastMonth) {
@@ -86,7 +87,9 @@ class AnalyticsController extends Controller
             ->get();
 
         // Dados para gráfico de vendas (últimos 6 meses)
-        $salesChart = [];
+        $salesChartLabels = [];
+        $salesChartData = [];
+        
         for ($i = 5; $i >= 0; $i--) {
             $monthStart = Carbon::now()->subMonths($i)->startOfMonth();
             $monthEnd = Carbon::now()->subMonths($i)->endOfMonth();
@@ -98,13 +101,16 @@ class AnalyticsController extends Controller
                 ->where('status', 'delivered')
                 ->sum('total_amount');
             
-            $salesChart[] = [
-                'month' => $monthStart->format('M Y'),
-                'sales' => (float)$monthSales
-            ];
+            $salesChartLabels[] = $monthStart->format('M Y');
+            $salesChartData[] = (float)$monthSales;
         }
 
-        // Avaliações médias - Versão simplificada
+        $salesChart = [
+            'labels' => $salesChartLabels,
+            'data' => $salesChartData
+        ];
+
+        // Avaliações médias
         $productIds = Product::where('petshop_id', $petshop->id)->pluck('id');
         $avgProductRating = Review::where('reviewable_type', Product::class)
             ->whereIn('reviewable_id', $productIds)
@@ -277,20 +283,19 @@ class AnalyticsController extends Controller
 
         // Pedidos recentes
         $recentOrders = Order::where('user_id', $user->id)
-            ->with('items.product')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        // Estatísticas anuais
+        // Estatísticas do ano
         $yearlyStats = [
-            'total_spent' => Order::where('user_id', $user->id)
-                ->where('created_at', '>=', $thisYear)
-                ->where('status', 'delivered')
-                ->sum('total_amount'),
             'total_orders' => Order::where('user_id', $user->id)
                 ->where('created_at', '>=', $thisYear)
                 ->count(),
+            'total_spent' => Order::where('user_id', $user->id)
+                ->where('created_at', '>=', $thisYear)
+                ->whereIn('status', ['paid', 'shipped', 'delivered'])
+                ->sum('total_amount'),
             'total_appointments' => Appointment::where('user_id', $user->id)
                 ->where('created_at', '>=', $thisYear)
                 ->count()
@@ -302,18 +307,27 @@ class AnalyticsController extends Controller
             $monthStart = Carbon::now()->subMonths($i)->startOfMonth();
             $monthEnd = Carbon::now()->subMonths($i)->endOfMonth();
             
-            $monthSpent = Order::where('user_id', $user->id)
+            $monthSpending = Order::where('user_id', $user->id)
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->where('status', 'delivered')
+                ->whereIn('status', ['paid', 'shipped', 'delivered']) // Corrigido: incluir todos os status válidos
                 ->sum('total_amount');
             
             $spendingChart[] = [
                 'month' => $monthStart->format('M Y'),
-                'amount' => (float)$monthSpent
+                'amount' => (float)$monthSpending
             ];
         }
 
-        // Pets favoritos (mais agendamentos)
+        // Debug para verificar os dados
+        \Log::info('Spending Chart Data:', $spendingChart);
+
+        // Todos os pets do usuário
+        $userPets = \App\Models\Pet::where('user_id', $user->id)
+            ->withCount('appointments')
+            ->orderBy('appointments_count', 'desc')
+            ->get();
+
+        // Pets favoritos (apenas para estatísticas - os com mais agendamentos)
         $favoritePets = Appointment::where('user_id', $user->id)
             ->select('pet_id', DB::raw('COUNT(*) as appointments_count'))
             ->with('pet')
@@ -327,6 +341,7 @@ class AnalyticsController extends Controller
             'recentOrders',
             'yearlyStats',
             'spendingChart',
+            'userPets',
             'favoritePets'
         ));
     }
@@ -370,8 +385,11 @@ class AnalyticsController extends Controller
                 'sales' => (float)$monthSales
             ];
         }
-        
-        return response()->json($salesData);
+
+        return response()->json([
+            'labels' => array_column($salesData, 'month'),
+            'data' => array_column($salesData, 'sales')
+        ]);
     }
 
     private function getEmployeeWeeklyData($request)
@@ -390,31 +408,37 @@ class AnalyticsController extends Controller
                 'count' => $count
             ];
         }
-        
-        return response()->json($weeklyData);
+
+        return response()->json([
+            'labels' => array_column($weeklyData, 'day'),
+            'data' => array_column($weeklyData, 'count')
+        ]);
     }
 
     private function getClientSpendingData($request)
     {
         $user = auth()->user();
-        $months = $request->get('months', 6);
+        $months = $request->get('months', 12);
         
         $spendingData = [];
         for ($i = $months - 1; $i >= 0; $i--) {
             $monthStart = Carbon::now()->subMonths($i)->startOfMonth();
             $monthEnd = Carbon::now()->subMonths($i)->endOfMonth();
             
-            $monthSpent = Order::where('user_id', $user->id)
+            $monthSpending = Order::where('user_id', $user->id)
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->where('status', 'delivered')
+                ->whereIn('status', ['paid', 'shipped', 'delivered'])
                 ->sum('total_amount');
             
             $spendingData[] = [
                 'month' => $monthStart->format('M Y'),
-                'amount' => (float)$monthSpent
+                'spending' => (float)$monthSpending
             ];
         }
-        
-        return response()->json($spendingData);
+
+        return response()->json([
+            'labels' => array_column($spendingData, 'month'),
+            'data' => array_column($spendingData, 'spending')
+        ]);
     }
 }

@@ -18,12 +18,92 @@ class PetshopController extends Controller
         $this->middleware('role:petshop')->except(['index', 'show']);
     }
     
-    public function index()
+    public function index(Request $request)
     {
-        $petshops = Petshop::where('is_active', true)
-                     ->paginate(12);
+        $query = Petshop::where('is_active', true);
         
-        return view('petshops.index', compact('petshops'));
+        // Filtro de busca por nome
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%')
+                  ->orWhere('address', 'like', '%' . $search . '%');
+            });
+        }
+        
+        // Filtro por cidade/região (extraído do endereço)
+        if ($request->filled('city')) {
+            $query->where('address', 'like', '%' . $request->city . '%');
+        }
+        
+        // Filtro por tipo de serviço oferecido
+        if ($request->filled('service_type')) {
+            $query->whereHas('services', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->service_type . '%')
+                  ->where('is_active', true);
+            });
+        }
+        
+        // Filtro por categoria de produtos
+        if ($request->filled('product_category')) {
+            $query->whereHas('products', function($q) use ($request) {
+                $q->where('category', $request->product_category)
+                  ->where('is_active', true);
+            });
+        }
+        
+        // Ordenação
+        $sortBy = $request->get('sort', 'name');
+        $sortOrder = $request->get('order', 'asc');
+        
+        switch ($sortBy) {
+            case 'name':
+                $query->orderBy('name', $sortOrder);
+                break;
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'rating':
+                // Se você tiver sistema de avaliações, pode implementar aqui
+                $query->orderBy('name', $sortOrder);
+                break;
+            default:
+                $query->orderBy('name', 'asc');
+        }
+        
+        $petshops = $query->withCount(['products' => function($q) {
+                            $q->where('is_active', true);
+                        }, 'services' => function($q) {
+                            $q->where('is_active', true);
+                        }])
+                        ->paginate(12)
+                        ->withQueryString();
+        
+        // Dados para os filtros
+        $cities = Petshop::where('is_active', true)
+                        ->selectRaw("TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(address, ',', -2), ',', 1)) as city")
+                        ->groupBy('city')
+                        ->orderBy('city')
+                        ->pluck('city')
+                        ->filter()
+                        ->unique()
+                        ->values();
+        
+        $serviceTypes = Service::where('is_active', true)
+                              ->distinct()
+                              ->orderBy('name')
+                              ->pluck('name');
+        
+        $productCategories = [
+            'food' => 'Alimentação',
+            'toys' => 'Brinquedos',
+            'accessories' => 'Acessórios',
+            'health' => 'Saúde',
+            'hygiene' => 'Higiene'
+        ];
+        
+        return view('petshops.index', compact('petshops', 'cities', 'serviceTypes', 'productCategories'));
     }
     
     public function show(Petshop $petshop)
@@ -96,8 +176,8 @@ class PetshopController extends Controller
         $appointments = Appointment::whereHas('service', function ($query) use ($petshop) {
                               $query->where('petshop_id', $petshop->id);
                           })
-                          ->with(['pet', 'service', 'employee', 'user'])
-                          ->orderBy('appointment_datetime')
+                          ->with('service', 'pet', 'user')
+                          ->orderBy('appointment_datetime', 'desc')
                           ->paginate(10);
         
         return view('petshop.appointments', compact('appointments'));
@@ -112,7 +192,8 @@ class PetshopController extends Controller
             'description' => 'nullable|string',
             'address' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
-            'email' => 'required|email|max:255',
+            'email' => 'required|string|email|max:255',
+            'opening_hours' => 'nullable|string|max:255',
             'logo' => 'nullable|image|max:2048',
         ]);
         
@@ -121,6 +202,7 @@ class PetshopController extends Controller
         $petshop->address = $request->address;
         $petshop->phone = $request->phone;
         $petshop->email = $request->email;
+        $petshop->opening_hours = $request->opening_hours;
         
         if ($request->hasFile('logo')) {
             // Excluir logo antigo se existir
@@ -134,6 +216,7 @@ class PetshopController extends Controller
         
         $petshop->save();
         
-        return back()->with('success', 'Informações do pet shop atualizadas com sucesso!');
+        return redirect()->route('petshop.dashboard')
+                         ->with('success', 'Informações atualizadas com sucesso!');
     }
 }

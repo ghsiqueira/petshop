@@ -17,12 +17,14 @@ use App\Http\Controllers\EmployeeManagementController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PetshopController as AdminPetshopController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +40,16 @@ Route::get('/petshops', [PetshopController::class, 'index'])->name('petshops.ind
 Route::get('/petshops/{petshop}', [PetshopController::class, 'show'])->name('petshops.show');
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 Route::get('/services/{service}', [ServiceController::class, 'show'])->name('services.show');
+
+// Rotas de Busca
+Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
+Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
+
+// Rota para busca rápida na barra de navegação
+Route::get('/quick-search', function(Request $request) {
+    return redirect()->route('search.index', $request->all());
+})->name('quick-search');
 
 // Rotas do carrinho
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

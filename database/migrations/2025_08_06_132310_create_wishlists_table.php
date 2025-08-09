@@ -14,8 +14,11 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->timestamps();
             
-            // Evitar duplicatas - um usuário só pode favoritar um produto uma vez
+            // Evitar duplicatas
             $table->unique(['user_id', 'product_id']);
+            
+            // Índices para performance
+            $table->index(['user_id', 'created_at']);
         });
     }
 

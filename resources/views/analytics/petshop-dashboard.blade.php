@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard Funcionário - ' . $employee->user->name)
+@section('title', 'Dashboard Analytics - ' . $petshop->name)
 
 @section('content')
 <div class="container-fluid">
@@ -9,22 +9,22 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h3 mb-0 text-gray-800">👨‍💼 Dashboard Funcionário</h1>
-                    <p class="text-muted">{{ $employee->user->name }} - {{ ucfirst($employee->position) }}</p>
+                    <h1 class="h3 mb-0 text-gray-800">🏪 Dashboard Analytics</h1>
+                    <p class="text-muted">{{ $petshop->name }}</p>
                 </div>
                 <div class="text-end">
-                    <div class="badge bg-primary fs-6">
-                        ⭐ {{ number_format($avgRating, 1) }} avaliação média
+                    <div class="badge bg-primary fs-6 me-2">
+                        ⭐ {{ number_format(($avgProductRating + $avgServiceRating) / 2, 1) }} avaliação média
                     </div>
-                    <a href="{{ route('employee.appointments') }}" class="btn btn-outline-primary ms-2">
-                        <i class="fas fa-list me-1"></i>Ver Todos Agendamentos
+                    <a href="{{ route('petshop.dashboard') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard Simples
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Cards de Métricas -->
+    <!-- Cards de Métricas Principais -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-primary shadow h-100 py-2 card-hover">
@@ -32,14 +32,25 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Agendamentos do Mês
+                                Receita Mensal
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $monthlyStats['total_appointments'] }}
+                                R$ {{ number_format($monthlyRevenue, 2, ',', '.') }}
                             </div>
+                            @if($growthPercentage > 0)
+                                <small class="text-success">
+                                    <i class="fas fa-arrow-up"></i> +{{ number_format($growthPercentage, 1) }}%
+                                </small>
+                            @elseif($growthPercentage < 0)
+                                <small class="text-danger">
+                                    <i class="fas fa-arrow-down"></i> {{ number_format($growthPercentage, 1) }}%
+                                </small>
+                            @else
+                                <small class="text-muted">Sem variação</small>
+                            @endif
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -52,34 +63,14 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Serviços Concluídos
+                                Clientes Únicos (30 dias)
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $monthlyStats['completed_appointments'] }}
+                                {{ $uniqueCustomers }}
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2 card-hover">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Taxa de Conclusão
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $monthlyStats['total_appointments'] > 0 ? number_format(($monthlyStats['completed_appointments'] / $monthlyStats['total_appointments']) * 100, 1) : 0 }}%
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -92,14 +83,34 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Agendamentos Hoje
+                                Total de Produtos
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $todayAppointments->count() }}
+                                {{ $totalProducts }}
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2 card-hover">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total de Serviços
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $totalServices }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-cut fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -107,274 +118,252 @@
         </div>
     </div>
 
-    <!-- Gráfico + Agendamentos de Hoje -->
-    <div class="row mb-4">
-        <!-- Gráfico da Semana -->
-        <div class="col-lg-7">
+    <!-- Gráficos e Análises -->
+    <div class="row">
+        <!-- Gráfico de Vendas -->
+        <div class="col-xl-8 col-lg-7">
             <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">📊 Agendamentos da Semana</h6>
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">📊 Vendas dos Últimos 6 Meses</h6>
                 </div>
                 <div class="card-body">
                     <div class="chart-area">
-                        <canvas id="weeklyChart"></canvas>
+                        <canvas id="salesChart" width="100%" height="40"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Agendamentos de Hoje -->
-        <div class="col-lg-5">
+        <!-- Status dos Agendamentos -->
+        <div class="col-xl-4 col-lg-5">
             <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">🗓️ Agenda de Hoje</h6>
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">📅 Agendamentos (30 dias)</h6>
                 </div>
-                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    @forelse($todayAppointments as $appointment)
-                    <div class="d-flex align-items-center mb-3 p-2 border-left-{{ $appointment->status == 'completed' ? 'success' : ($appointment->status == 'confirmed' ? 'info' : 'warning') }} bg-light rounded">
-                        <div class="flex-shrink-0">
-                            <div class="bg-{{ $appointment->status == 'completed' ? 'success' : ($appointment->status == 'confirmed' ? 'info' : 'warning') }} rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                <i class="fas fa-{{ $appointment->status == 'completed' ? 'check' : ($appointment->status == 'confirmed' ? 'clock' : 'calendar') }} text-white"></i>
+                <div class="card-body">
+                    @if(!empty($appointmentStats))
+                        @foreach($appointmentStats as $status => $count)
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-capitalize">{{ $status }}</span>
+                                    <span class="font-weight-bold">{{ $count }}</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    @php
+                                        $total = array_sum($appointmentStats);
+                                        $percentage = $total > 0 ? ($count / $total) * 100 : 0;
+                                        $color = match($status) {
+                                            'completed' => 'success',
+                                            'confirmed' => 'info',
+                                            'pending' => 'warning',
+                                            'cancelled' => 'danger',
+                                            default => 'secondary'
+                                        };
+                                    @endphp
+                                    <div class="progress-bar bg-{{ $color }}" 
+                                         role="progressbar" 
+                                         style="width: {{ $percentage }}%">
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex-grow-1 ms-3">
-                            <div class="fw-bold">{{ $appointment->appointment_datetime->format('H:i') }}</div>
-                            <div class="text-primary fw-bold">{{ $appointment->service->name }}</div>
-                            <small class="text-muted">
-                                {{ $appointment->pet->name }} ({{ $appointment->user->name }})
-                            </small>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <span class="badge bg-{{ $appointment->status == 'completed' ? 'success' : ($appointment->status == 'confirmed' ? 'info' : 'warning') }}">
-                                {{ $appointment->status == 'completed' ? 'Concluído' : ($appointment->status == 'confirmed' ? 'Confirmado' : 'Pendente') }}
-                            </span>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center py-4">
-                        <i class="fas fa-calendar-check fa-3x text-gray-300 mb-3"></i>
-                        <p class="text-muted">Nenhum agendamento para hoje</p>
-                        <small class="text-muted">Que tal dar uma olhada nos próximos dias?</small>
-                    </div>
-                    @endforelse
+                        @endforeach
+                    @else
+                        <p class="text-muted text-center">Nenhum agendamento nos últimos 30 dias.</p>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tabelas -->
+    <!-- Produtos e Serviços Mais Populares -->
     <div class="row">
-        <!-- Próximos Agendamentos -->
-        <div class="col-lg-8 mb-4">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">📅 Próximos Agendamentos</h6>
+        <!-- Top Produtos -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">🏆 Top Produtos (30 dias)</h6>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Data/Hora</th>
-                                    <th>Serviço</th>
-                                    <th>Pet</th>
-                                    <th>Cliente</th>
-                                    <th class="text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($upcomingAppointments as $appointment)
-                                <tr>
-                                    <td>
-                                        <div>
-                                            <div class="fw-bold">{{ $appointment->appointment_datetime->format('d/m/Y') }}</div>
-                                            <small class="text-muted">{{ $appointment->appointment_datetime->format('H:i') }}</small>
-                                            @if($appointment->appointment_datetime->isToday())
-                                                <span class="badge bg-primary ms-1">Hoje</span>
-                                            @elseif($appointment->appointment_datetime->isTomorrow())
-                                                <span class="badge bg-info ms-1">Amanhã</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <div class="fw-bold">{{ $appointment->service->name }}</div>
-                                            <small class="text-muted">{{ $appointment->service->duration_minutes }}min</small>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                                <i class="fas fa-paw text-white"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold">{{ $appointment->pet->name }}</div>
-                                                <small class="text-muted">{{ $appointment->pet->species }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>{{ $appointment->user->name }}</td>
-                                    <td class="text-center">
-                                        <span class="badge bg-{{ $appointment->status == 'confirmed' ? 'info' : ($appointment->status == 'pending' ? 'warning' : 'secondary') }}">
-                                            {{ $appointment->status == 'confirmed' ? 'Confirmado' : ($appointment->status == 'pending' ? 'Pendente' : ucfirst($appointment->status)) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">
-                                        Nenhum agendamento próximo
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    @if($topProducts->count() > 0)
+                        @foreach($topProducts as $index => $item)
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    <span class="badge bg-primary rounded-pill">#{{ $index + 1 }}</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-weight-bold">{{ $item->product->name }}</div>
+                                    <small class="text-muted">
+                                        {{ $item->total_sold }} vendidos • 
+                                        R$ {{ number_format($item->total_revenue, 2, ',', '.') }}
+                                    </small>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-muted text-center">Nenhuma venda nos últimos 30 dias.</p>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <!-- Serviços Mais Realizados -->
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">🏆 Meus Serviços Top</h6>
+        <!-- Top Serviços -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">⭐ Top Serviços (30 dias)</h6>
                 </div>
                 <div class="card-body">
-                    @forelse($topServices as $index => $service)
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="flex-shrink-0">
-                            <span class="badge bg-{{ $index == 0 ? 'warning' : ($index == 1 ? 'secondary' : 'primary') }} fs-6">
-                                {{ $index + 1 }}
-                            </span>
+                    @if($topServices->count() > 0)
+                        @foreach($topServices as $index => $item)
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    <span class="badge bg-success rounded-pill">#{{ $index + 1 }}</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-weight-bold">{{ $item->service->name }}</div>
+                                    <small class="text-muted">
+                                        {{ $item->total_appointments }} agendamentos
+                                    </small>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-muted text-center">Nenhum agendamento nos últimos 30 dias.</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações Adicionais -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">📈 Resumo do Negócio</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="border-right pb-3">
+                                <div class="h4 font-weight-bold text-primary">{{ $totalEmployees }}</div>
+                                <div class="text-muted">Funcionários</div>
+                            </div>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <div class="fw-bold">{{ $service->service->name }}</div>
-                            <small class="text-muted">{{ $service->count }} realizados este mês</small>
+                        <div class="col-md-3 text-center">
+                            <div class="border-right pb-3">
+                                <div class="h4 font-weight-bold text-success">{{ number_format($avgProductRating, 1) }}</div>
+                                <div class="text-muted">Avaliação Produtos</div>
+                            </div>
                         </div>
-                        <div class="flex-shrink-0">
-                            <div class="progress" style="width: 60px; height: 8px;">
-                                <div class="progress-bar bg-{{ $index == 0 ? 'warning' : ($index == 1 ? 'secondary' : 'primary') }}" 
-                                     style="width: {{ $topServices->count() > 0 ? ($service->count / $topServices->first()->count) * 100 : 0 }}%"></div>
+                        <div class="col-md-3 text-center">
+                            <div class="border-right pb-3">
+                                <div class="h4 font-weight-bold text-info">{{ number_format($avgServiceRating, 1) }}</div>
+                                <div class="text-muted">Avaliação Serviços</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="pb-3">
+                                <div class="h4 font-weight-bold text-warning">
+                                    {{ $petshop->is_active ? 'Ativo' : 'Inativo' }}
+                                </div>
+                                <div class="text-muted">Status da Loja</div>
                             </div>
                         </div>
                     </div>
-                    @empty
-                    <div class="text-center py-4">
-                        <i class="fas fa-clipboard-list fa-3x text-gray-300 mb-3"></i>
-                        <p class="text-muted">Nenhum serviço realizado este mês</p>
-                    </div>
-                    @endforelse
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-<script>
-// Dados do gráfico semanal
-const weeklyData = @json($weeklyChart);
-
-// Gráfico de barras da semana
-const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
-const weeklyChart = new Chart(weeklyCtx, {
-    type: 'bar',
-    data: {
-        labels: weeklyData.map(item => item.day + '\n' + item.date),
-        datasets: [{
-            label: 'Agendamentos',
-            data: weeklyData.map(item => item.count),
-            backgroundColor: 'rgba(78, 115, 223, 0.8)',
-            borderColor: '#4e73df',
-            borderWidth: 1,
-            borderRadius: 4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
-                }
-            },
-            x: {
-                ticks: {
-                    maxRotation: 0
-                }
-            }
-        },
-        elements: {
-            bar: {
-                borderRadius: 4
-            }
-        }
-    }
-});
-
-// Atualização automática a cada 5 minutos
-setInterval(() => {
-    location.reload();
-}, 300000); // 5 minutos
-
-// Função para atualizar em tempo real
-function refreshDashboard() {
-    location.reload();
-}
-</script>
-
+@push('styles')
 <style>
-.border-left-primary { border-left: 0.25rem solid #4e73df !important; }
-.border-left-success { border-left: 0.25rem solid #1cc88a !important; }
-.border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
-.border-left-info { border-left: 0.25rem solid #36b9cc !important; }
-
-.chart-area {
-    position: relative;
-    height: 300px;
-}
-
-.text-gray-800 { color: #5a5c69 !important; }
-.text-gray-300 { color: #dddfeb !important; }
-
 .card-hover {
-    transition: all 0.3s;
+    transition: transform 0.2s;
 }
-
 .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
 }
-
-@keyframes slideIn {
-    from { transform: translateX(-10px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
 }
-
-.table tbody tr {
-    animation: slideIn 0.3s ease-out;
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
 }
-
-.badge {
-    font-size: 0.75rem;
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
 }
-
-.progress {
-    border-radius: 4px;
-    background-color: #e9ecef;
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
 }
-
-.progress-bar {
-    border-radius: 4px;
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+.chart-area {
+    position: relative;
+    height: 450px; /* Aumentado de 300px para 450px */
+    width: 100%;
 }
 </style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dados do gráfico vindos do PHP
+    const salesData = @json($salesChart);
+    
+    // Configuração do gráfico de vendas
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: salesData.labels,
+            datasets: [{
+                label: 'Vendas (R$)',
+                data: salesData.data,
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'R$ ' + value.toLocaleString('pt-BR');
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Vendas: R$ ' + context.parsed.y.toLocaleString('pt-BR', {
+                                minimumFractionDigits: 2
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+@endpush
 @endsection

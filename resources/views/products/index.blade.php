@@ -1,145 +1,312 @@
+{{-- resources/views/products/index.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Produtos')
 
 @section('content')
 <div class="container">
-    <h1 class="mb-4">Produtos</h1>
-    
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <form action="{{ route('products.index') }}" method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2" placeholder="Buscar produtos..." value="{{ request('search') }}">
-                <button type="submit" class="btn btn-outline-primary">Buscar</button>
-            </form>
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Produtos</h1>
         </div>
-        <div class="col-md-6">
-            <div class="d-flex justify-content-end">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown">
-                        Categorias
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ route('products.index') }}">Todas</a></li>
-                        <li><a class="dropdown-item" href="{{ route('products.index', ['category' => 'food']) }}">Alimentação</a></li>
-                        <li><a class="dropdown-item" href="{{ route('products.index', ['category' => 'toys']) }}">Brinquedos</a></li>
-                        <li><a class="dropdown-item" href="{{ route('products.index', ['category' => 'accessories']) }}">Acessórios</a></li>
-                        <li><a class="dropdown-item" href="{{ route('products.index', ['category' => 'health']) }}">Saúde</a></li>
-                    </ul>
-                </div>
-                
-                <div class="dropdown ms-2">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
-                        Ordenar
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ route('products.index', ['sort' => 'newest']) }}">Mais recentes</a></li>
-                        <li><a class="dropdown-item" href="{{ route('products.index', ['sort' => 'price_asc']) }}">Menor preço</a></li>
-                        <li><a class="dropdown-item" href="{{ route('products.index', ['sort' => 'price_desc']) }}">Maior preço</a></li>
-                        <li><a class="dropdown-item" href="{{ route('products.index', ['sort' => 'name_asc']) }}">Nome (A-Z)</a></li>
-                    </ul>
+    </div>
+    
+    <!-- Filtros e Busca -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" action="{{ route('products.index') }}" id="filtersForm">
+                        <div class="row">
+                            <!-- Campo de Busca -->
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Buscar produtos:</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search" 
+                                       value="{{ request('search') }}" 
+                                       placeholder="Nome, descrição, marca...">
+                            </div>
+                            
+                            <!-- Filtro por Categoria -->
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Categoria:</label>
+                                <select class="form-select" name="category">
+                                    <option value="">Todas</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>
+                                            {{ $cat }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <!-- Filtro por Marca -->
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Marca:</label>
+                                <select class="form-select" name="brand">
+                                    <option value="">Todas</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand }}" {{ request('brand') == $brand ? 'selected' : '' }}>
+                                            {{ $brand }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <!-- Ordenação -->
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">Ordenar por:</label>
+                                <select class="form-select" name="sort">
+                                    <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Nome A-Z</option>
+                                    <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Nome Z-A</option>
+                                    <option value="price_asc" {{ request('sort') == 'price_asc' ? 'selected' : '' }}>Menor preço</option>
+                                    <option value="price_desc" {{ request('sort') == 'price_desc' ? 'selected' : '' }}>Maior preço</option>
+                                    <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Mais recente</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Botões -->
+                            <div class="col-md-2 mb-3 d-flex align-items-end">
+                                <div class="btn-group w-100">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filtros Avançados (Colapsível) -->
+                        <div class="row">
+                            <div class="col-12">
+                                <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                                    <i class="fas fa-filter me-1"></i>Filtros Avançados
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="collapse mt-3" id="advancedFilters">
+                            <div class="row">
+                                <!-- Faixa de Preço -->
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Preço mínimo:</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           name="min_price" 
+                                           value="{{ request('min_price') }}" 
+                                           placeholder="R$ 0,00" 
+                                           step="0.01" 
+                                           min="0">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Preço máximo:</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           name="max_price" 
+                                           value="{{ request('max_price') }}" 
+                                           placeholder="R$ 999,00" 
+                                           step="0.01" 
+                                           min="0">
+                                </div>
+                                
+                                <!-- Filtros Especiais -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Filtros especiais:</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               name="in_stock" 
+                                               value="1" 
+                                               {{ request('in_stock') ? 'checked' : '' }} 
+                                               id="inStockFilter">
+                                        <label class="form-check-label" for="inStockFilter">
+                                            Apenas em estoque
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               name="featured" 
+                                               value="1" 
+                                               {{ request('featured') ? 'checked' : '' }} 
+                                               id="featuredFilter">
+                                        <label class="form-check-label" for="featuredFilter">
+                                            Produtos em destaque
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Informações dos Resultados -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="text-muted mb-0">
+                    Mostrando {{ $products->count() }} de {{ $products->total() }} produto(s)
+                </p>
+                
+                <!-- Filtros Ativos -->
+                @if(request()->hasAny(['search', 'category', 'brand', 'min_price', 'max_price', 'in_stock', 'featured']))
+                    <div class="active-filters">
+                        <span class="text-muted me-2">Filtros ativos:</span>
+                        @if(request('search'))
+                            <span class="badge bg-primary me-1">Busca: {{ request('search') }}</span>
+                        @endif
+                        @if(request('category'))
+                            <span class="badge bg-info me-1">Categoria: {{ request('category') }}</span>
+                        @endif
+                        @if(request('brand'))
+                            <span class="badge bg-success me-1">Marca: {{ request('brand') }}</span>
+                        @endif
+                        @if(request('min_price'))
+                            <span class="badge bg-warning me-1">Min: R$ {{ request('min_price') }}</span>
+                        @endif
+                        @if(request('max_price'))
+                            <span class="badge bg-warning me-1">Max: R$ {{ request('max_price') }}</span>
+                        @endif
+                        @if(request('in_stock'))
+                            <span class="badge bg-secondary me-1">Em estoque</span>
+                        @endif
+                        @if(request('featured'))
+                            <span class="badge bg-dark me-1">Destaque</span>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
     
+    <!-- Lista de Produtos -->
     <div class="row">
         @forelse($products as $product)
-            <div class="col-md-3 mb-4">
-                <div class="card h-100 shadow-sm position-relative">
-                    <!-- Botão Wishlist -->
-                    @auth
-                        <button class="btn btn-outline-danger btn-sm position-absolute wishlist-btn" 
-                                style="top: 10px; right: 10px; z-index: 10; border-radius: 50%; width: 40px; height: 40px; padding: 0;"
-                                data-product-id="{{ $product->id }}"
-                                data-bs-toggle="tooltip" 
-                                data-bs-placement="left" 
-                                title="{{ auth()->user()->hasInWishlist($product->id) ? 'Remover da lista de desejos' : 'Adicionar à lista de desejos' }}">
-                            <i class="fas fa-heart {{ auth()->user()->hasInWishlist($product->id) ? 'text-danger' : '' }}"></i>
-                        </button>
-                    @endauth
-
-                    <img src="{{ $product->image ? asset('storage/' . $product->image) : 'https://via.placeholder.com/300x200?text=Sem+Imagem' }}" 
-                         class="card-img-top" 
-                         alt="{{ $product->name }}"
-                         style="height: 200px; object-fit: cover;">
-                    
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ $product->name }}</h5>
-                        <p class="card-text text-muted small flex-grow-1">
-                            {{ Str::limit($product->description, 80) }}
-                        </p>
-                        
-                        <!-- Categoria -->
-                        <div class="mb-2">
-                            <span class="badge bg-secondary">
-                                {{ ucfirst($product->category) }}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 product-card">
+                    <!-- Badges -->
+                    @if(isset($product->featured) && $product->featured)
+                        <div class="position-absolute top-0 start-0 m-2">
+                            <span class="badge bg-warning">
+                                <i class="fas fa-star me-1"></i>Destaque
                             </span>
                         </div>
-                        
-                        <!-- Preço e Estoque -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="h5 mb-0 text-primary">R$ {{ number_format($product->price, 2, ',', '.') }}</span>
-                            @if($product->stock > 0)
-                                <span class="badge bg-success">Em estoque</span>
-                            @else
-                                <span class="badge bg-danger">Indisponível</span>
-                            @endif
+                    @endif
+                    
+                    @if(isset($product->quantity) && $product->quantity <= 0)
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-danger">Fora de estoque</span>
                         </div>
-                        
-                        <!-- Reviews -->
-                        @if($product->reviews->count() > 0)
-                            <div class="mb-2">
-                                <div class="d-flex align-items-center">
-                                    @php
-                                        $avgRating = $product->reviews->avg('rating');
-                                    @endphp
-                                    <div class="text-warning">
-                                        @for($i = 1; $i <= 5; $i++)
-                                            @if($i <= $avgRating)
-                                                <i class="fas fa-star"></i>
-                                            @else
-                                                <i class="far fa-star"></i>
-                                            @endif
-                                        @endfor
-                                    </div>
-                                    <small class="text-muted ms-2">
-                                        ({{ number_format($avgRating, 1) }} - {{ $product->reviews->count() }} {{ $product->reviews->count() == 1 ? 'avaliação' : 'avaliações' }})
-                                    </small>
-                                </div>
+                    @elseif(isset($product->quantity) && $product->quantity <= 5)
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-warning">Últimas unidades</span>
+                        </div>
+                    @endif
+
+                    <!-- Imagem -->
+                    <div class="position-relative">
+                        @if($product->image)
+                            <img src="{{ asset('storage/' . $product->image) }}" 
+                                 class="card-img-top" 
+                                 alt="{{ $product->name }}" 
+                                 style="height: 200px; object-fit: cover;">
+                        @else
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="fas fa-box fa-3x text-muted"></i>
                             </div>
                         @endif
                         
+                        <!-- Botão de Wishlist -->
+                        @auth
+                            <button class="btn btn-sm btn-light position-absolute top-0 end-0 m-2 wishlist-btn" 
+                                    data-product-id="{{ $product->id }}"
+                                    style="border-radius: 50%; width: 35px; height: 35px;">
+                                <i class="fas fa-heart {{ auth()->user()->hasInWishlist($product->id) ? 'text-danger' : 'text-muted' }}"></i>
+                            </button>
+                        @endauth
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <!-- Título -->
+                        <h5 class="card-title">{{ $product->name }}</h5>
+                        
+                        <!-- Descrição -->
+                        @if($product->description)
+                            <p class="card-text text-muted small">
+                                {{ Str::limit($product->description, 80) }}
+                            </p>
+                        @endif
+                        
+                        <!-- Informações do Produto -->
+                        <div class="product-info mb-2">
+                            @if($product->brand)
+                                <small class="text-muted">
+                                    <strong>Marca:</strong> {{ $product->brand }}
+                                </small><br>
+                            @endif
+                            
+                            @if($product->category)
+                                <small class="text-muted">
+                                    <strong>Categoria:</strong> {{ $product->category }}
+                                </small><br>
+                            @endif
+                            
+                            @if($product->petshop)
+                                <small class="text-muted">
+                                    <i class="fas fa-store me-1"></i>{{ $product->petshop->name }}
+                                </small>
+                            @endif
+                        </div>
+
+                        <!-- Preço -->
+                        <div class="price-section mb-3 mt-auto">
+                            <h4 class="text-primary mb-0">R$ {{ number_format($product->price, 2, ',', '.') }}</h4>
+                        </div>
+
                         <!-- Botões -->
-                        <div class="mt-auto">
-                            <div class="d-grid gap-2">
-                                <a href="{{ route('products.show', $product) }}" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-eye me-1"></i> Ver Detalhes
+                        <div class="d-grid gap-2">
+                            <a href="{{ route('products.show', $product->id) }}" class="btn btn-outline-primary">
+                                <i class="fas fa-eye me-2"></i>Ver Detalhes
+                            </a>
+                            
+                            @auth
+                                <button class="btn btn-primary add-to-cart-btn" 
+                                        data-product-id="{{ $product->id }}"
+                                        {{ (isset($product->quantity) && $product->quantity <= 0) ? 'disabled' : '' }}>
+                                    <i class="fas fa-shopping-cart me-2"></i>
+                                    {{ (isset($product->quantity) && $product->quantity <= 0) ? 'Indisponível' : 'Adicionar ao Carrinho' }}
+                                </button>
+                            @else
+                                <a href="{{ route('login') }}" class="btn btn-primary">
+                                    <i class="fas fa-shopping-cart me-2"></i>Fazer Login
                                 </a>
-                                
-                                @if($product->stock > 0)
-                                    <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
-                                        @csrf
-                                        <input type="hidden" name="quantity" value="1">
-                                        <button type="submit" class="btn btn-primary btn-sm w-100">
-                                            <i class="fas fa-cart-plus me-1"></i> Adicionar ao Carrinho
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
+                            @endauth
                         </div>
                     </div>
                 </div>
             </div>
         @empty
             <div class="col-12">
-                <div class="card">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-search fa-4x text-muted mb-3"></i>
-                        <h3>Nenhum produto encontrado</h3>
-                        <p class="text-muted mb-4">Tente ajustar os filtros de busca ou navegue pelas categorias.</p>
-                        <a href="{{ route('products.index') }}" class="btn btn-primary">Ver todos os produtos</a>
-                    </div>
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                    <h4>Nenhum produto encontrado</h4>
+                    <p class="text-muted">
+                        @if(request()->hasAny(['search', 'category', 'brand', 'min_price', 'max_price']))
+                            Tente ajustar os filtros ou 
+                            <a href="{{ route('products.index') }}">ver todos os produtos</a>.
+                        @else
+                            Não há produtos disponíveis no momento.
+                        @endif
+                    </p>
                 </div>
             </div>
         @endforelse
@@ -147,94 +314,51 @@
     
     <!-- Paginação -->
     @if($products->hasPages())
-        <div class="row">
-            <div class="col-12 d-flex justify-content-center">
-                {{ $products->links() }}
-            </div>
+        <div class="d-flex justify-content-center mt-4">
+            {{ $products->links() }}
         </div>
     @endif
 </div>
-@endsection
 
-@section('scripts')
+<style>
+.product-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e3e6f0;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.wishlist-btn {
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.wishlist-btn:hover {
+    opacity: 1;
+}
+
+.active-filters .badge {
+    font-size: 0.75rem;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Manejar cliques nos botões de wishlist
-    document.querySelectorAll('.wishlist-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const icon = this.querySelector('i');
-            
-            // Desabilitar botão temporariamente
-            this.disabled = true;
-            
-            fetch(`/wishlist/${productId}/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Alternar aparência do ícone
-                    if (data.is_in_wishlist) {
-                        icon.classList.add('text-danger');
-                        this.title = 'Remover da lista de desejos';
-                    } else {
-                        icon.classList.remove('text-danger');
-                        this.title = 'Adicionar à lista de desejos';
-                    }
-                    
-                    // Atualizar contador na navegação se existir
-                    const wishlistCounter = document.getElementById('wishlist-counter');
-                    if (wishlistCounter) {
-                        wishlistCounter.textContent = data.wishlist_count || '0';
-                        
-                        // Se não há mais itens, ocultar o badge
-                        if (data.wishlist_count === 0) {
-                            wishlistCounter.style.display = 'none';
-                        } else {
-                            wishlistCounter.style.display = 'inline';
-                        }
-                    }
-                    
-                    // Mostrar toast de sucesso
-                    showToast(data.message, 'success');
-                } else {
-                    showToast(data.message || 'Erro ao processar solicitação', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                showToast('Erro ao processar solicitação', 'error');
-            })
-            .finally(() => {
-                this.disabled = false;
-            });
-        });
+    // Auto-submit form quando filtros mudarem
+    const form = document.getElementById('filtersForm');
+    const selects = form.querySelectorAll('select');
+    const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+    
+    selects.forEach(select => {
+        select.addEventListener('change', () => form.submit());
+    });
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => form.submit());
     });
 });
-
-function showToast(message, type) {
-    // Criar um toast simples
-    const toastDiv = document.createElement('div');
-    toastDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
-    toastDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1055; min-width: 300px;';
-    toastDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(toastDiv);
-    
-    // Remover automaticamente após 3 segundos
-    setTimeout(() => {
-        if (toastDiv.parentNode) {
-            toastDiv.parentNode.removeChild(toastDiv);
-        }
-    }, 3000);
-}
 </script>
 @endsection
