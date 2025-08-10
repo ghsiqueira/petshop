@@ -12,8 +12,9 @@
                     <h1 class="h3 mb-0 text-gray-800">🐾 Meu Dashboard</h1>
                     <p class="text-muted">{{ auth()->user()->name }} - Resumo das suas atividades</p>
                 </div>
-                <div>
-                    <a href="{{ route('pets.create') }}" class="btn btn-primary me-2">
+                <div class="d-flex gap-2">
+                    @include('components.export-buttons', ['type' => 'client'])
+                    <a href="{{ route('pets.create') }}" class="btn btn-primary">
                         <i class="fas fa-plus me-1"></i>Cadastrar Pet
                     </a>
                     <a href="{{ route('appointments.create') }}" class="btn btn-outline-primary">
@@ -35,7 +36,7 @@
                                 Pedidos Este Ano
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $yearlyStats['total_orders'] }}
+                                {{ $yearlyStats['total_orders'] ?? 0 }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -55,7 +56,7 @@
                                 Gasto Total Este Ano
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                R$ {{ number_format($yearlyStats['total_spent'], 2, ',', '.') }}
+                                R$ {{ number_format($yearlyStats['total_spent'] ?? 0, 2, ',', '.') }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -75,7 +76,7 @@
                                 Agendamentos Este Ano
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $yearlyStats['total_appointments'] }}
+                                {{ $yearlyStats['total_appointments'] ?? 0 }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -121,8 +122,8 @@
                                 </div>
                             </div>
                             <div class="flex-grow-1">
-                                <div class="font-weight-bold">{{ $appointment->pet->name }}</div>
-                                <div class="text-muted small">{{ $appointment->service->name }}</div>
+                                <div class="font-weight-bold">{{ $appointment->pet->name ?? 'Pet' }}</div>
+                                <div class="text-muted small">{{ $appointment->service->name ?? 'Serviço' }}</div>
                                 <div class="text-primary small">
                                     {{ \Carbon\Carbon::parse($appointment->appointment_datetime)->format('d/m/Y H:i') }}
                                 </div>
@@ -176,7 +177,7 @@
                                     </small>
                                     <br>
                                     <small class="text-primary">
-                                        {{ $pet->appointments_count }} {{ $pet->appointments_count == 1 ? 'agendamento' : 'agendamentos' }}
+                                        {{ $pet->appointments_count ?? 0 }} {{ ($pet->appointments_count ?? 0) == 1 ? 'agendamento' : 'agendamentos' }}
                                     </small>
                                 </div>
                             </div>
@@ -263,7 +264,7 @@
     </div>
 
     <!-- Estatísticas dos Pets Favoritos -->
-    @if($favoritePets->count() > 0)
+    @if(isset($favoritePets) && $favoritePets->count() > 0)
     <div class="row">
         <div class="col-12">
             <div class="card shadow mb-4">
@@ -279,9 +280,9 @@
                                         <span class="badge bg-warning rounded-pill">#{{ $loop->iteration }}</span>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <div class="font-weight-bold">{{ $petStat->pet->name }}</div>
+                                        <div class="font-weight-bold">{{ $petStat->pet->name ?? 'Pet' }}</div>
                                         <small class="text-muted">
-                                            {{ $petStat->appointments_count }} {{ $petStat->appointments_count == 1 ? 'agendamento' : 'agendamentos' }}
+                                            {{ $petStat->appointments_count ?? 0 }} {{ ($petStat->appointments_count ?? 0) == 1 ? 'agendamento' : 'agendamentos' }}
                                         </small>
                                     </div>
                                 </div>
@@ -293,7 +294,93 @@
         </div>
     </div>
     @endif
+
+    <!-- Seção Adicional de Insights -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">💡 Insights e Recomendações</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-award fa-3x text-warning mb-3"></i>
+                                <h6>Pet Mais Ativo</h6>
+                                @if(isset($favoritePets) && $favoritePets->count() > 0)
+                                    <p class="text-muted">{{ $favoritePets->first()->pet->name ?? 'N/A' }}</p>
+                                @else
+                                    <p class="text-muted">Nenhum pet ainda</p>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                                <h6>Gasto Médio Mensal</h6>
+                                <p class="text-muted">
+                                    R$ {{ number_format(($yearlyStats['total_spent'] ?? 0) / 12, 2, ',', '.') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="fas fa-calendar-alt fa-3x text-info mb-3"></i>
+                                <h6>Próximo Agendamento</h6>
+                                @if(isset($upcomingAppointments) && $upcomingAppointments->count() > 0)
+                                    <p class="text-muted">{{ \Carbon\Carbon::parse($upcomingAppointments->first()->appointment_datetime)->format('d/m') }}</p>
+                                @else
+                                    <p class="text-muted">Nenhum agendado</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">⚡ Ações Rápidas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('products.index') }}" class="btn btn-outline-primary btn-lg w-100">
+                                <i class="fas fa-shopping-bag fa-2x mb-2"></i>
+                                <br>Comprar Produtos
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('appointments.create') }}" class="btn btn-outline-success btn-lg w-100">
+                                <i class="fas fa-calendar-plus fa-2x mb-2"></i>
+                                <br>Agendar Serviço
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('pets.create') }}" class="btn btn-outline-info btn-lg w-100">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <br>Cadastrar Pet
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('orders.index') }}" class="btn btn-outline-warning btn-lg w-100">
+                                <i class="fas fa-history fa-2x mb-2"></i>
+                                <br>Ver Histórico
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+@endsection
 
 @push('styles')
 <style>
@@ -303,7 +390,7 @@
 
 .chart-area {
     position: relative;
-    height: 400px; /* Aumentado de 320px para 400px */
+    height: 400px;
     width: 100%;
 }
 
@@ -320,8 +407,14 @@
 }
 
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
 .card {
@@ -332,6 +425,24 @@
     border-radius: 0.25rem;
     margin-left: 2px;
 }
+
+/* Gap utility for older Bootstrap versions */
+.d-flex.gap-2 > * + * {
+    margin-left: 0.5rem;
+}
+
+.btn-lg {
+    padding: 1rem 1.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-info:hover,
+.btn-outline-warning:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
 </style>
 @endpush
 
@@ -340,7 +451,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Dados do gráfico de gastos
-    const spendingData = @json($spendingChart);
+    const spendingData = @json($spendingChart ?? []);
     
     // Debug: verificar os dados no console
     console.log('Spending Data:', spendingData);
@@ -380,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false, // Importante para respeitar a altura definida
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
@@ -428,7 +539,24 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // Animações de entrada para cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    // Hover effects para ações rápidas
+    const quickActionBtns = document.querySelectorAll('.btn-outline-primary, .btn-outline-success, .btn-outline-info, .btn-outline-warning');
+    quickActionBtns.forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        btn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
 });
 </script>
 @endpush
-@endsection

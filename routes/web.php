@@ -17,19 +17,23 @@ use App\Http\Controllers\EmployeeManagementController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CouponController;
-use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PetshopController as AdminPetshopController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
 */
 
 // Rotas públicas
@@ -40,16 +44,6 @@ Route::get('/petshops', [PetshopController::class, 'index'])->name('petshops.ind
 Route::get('/petshops/{petshop}', [PetshopController::class, 'show'])->name('petshops.show');
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 Route::get('/services/{service}', [ServiceController::class, 'show'])->name('services.show');
-
-// Rotas de Busca
-Route::get('/search', [SearchController::class, 'index'])->name('search.index');
-Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
-Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
-
-// Rota para busca rápida na barra de navegação
-Route::get('/quick-search', function(Request $request) {
-    return redirect()->route('search.index', $request->all());
-})->name('quick-search');
 
 // Rotas do carrinho
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -102,6 +96,31 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/analytics/chart-data/{type}', [AnalyticsController::class, 'chartData'])->name('analytics.chart-data');
     
     // ==================== FIM ROTAS ANALYTICS ====================
+    
+    // ==================== ROTAS DE EXPORTAÇÃO ====================
+    
+    // Exportações do Cliente
+    Route::middleware(['role:client'])->group(function () {
+        Route::get('/export/client/dashboard/{format}', [ExportController::class, 'clientDashboard'])
+            ->name('export.client.dashboard')
+            ->where('format', 'csv|xlsx|pdf');
+    });
+
+    // Exportações do Petshop
+    Route::middleware(['role:petshop'])->group(function () {
+        Route::get('/export/petshop/dashboard/{format}', [ExportController::class, 'petshopDashboard'])
+            ->name('export.petshop.dashboard')
+            ->where('format', 'csv|xlsx|pdf');
+    });
+
+    // Exportações do Admin
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/export/admin/dashboard/{format}', [ExportController::class, 'adminDashboard'])
+            ->name('export.admin.dashboard')
+            ->where('format', 'csv|xlsx|pdf');
+    });
+    
+    // ==================== FIM ROTAS EXPORTAÇÃO ====================
     
     // Rotas de cupons para admin e petshop
     Route::middleware(['role:admin|petshop'])->group(function () {
@@ -171,38 +190,22 @@ Route::middleware(['auth'])->group(function () {
     // Rotas para admin
     Route::middleware(['role:admin'])->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
-            // Dashboard administrativo avançado
+            // Dashboard
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
             
-            // Recursos de administração
+            // Gerenciamento de usuários
             Route::resource('users', UserController::class);
+            
+            // Gerenciamento de roles (papéis)
             Route::resource('roles', RoleController::class);
+            
+            // Gerenciamento de permissões
             Route::resource('permissions', PermissionController::class);
+            
+            // Gerenciamento de petshops
             Route::resource('petshops', AdminPetshopController::class);
+            Route::patch('/petshops/{petshop}/toggle-status', [AdminPetshopController::class, 'toggleStatus'])->name('petshops.toggle-status');
+            Route::get('/petshops/export', [AdminPetshopController::class, 'export'])->name('petshops.export');
         });
-    });
-});
-
-// APIs para buscar serviços e funcionários (para agendamentos)
-Route::middleware('auth')->group(function () {
-    Route::get('/api/petshops/{petshop}/services', function($petshopId) {
-        $services = \App\Models\Service::where('petshop_id', $petshopId)
-                                      ->where('is_active', true)
-                                      ->select('id', 'name', 'price', 'duration_minutes')
-                                      ->get();
-        return response()->json($services);
-    });
-    
-    Route::get('/api/petshops/{petshop}/employees', function($petshopId) {
-        $employees = \App\Models\Employee::where('petshop_id', $petshopId)
-                                        ->with('user:id,name')
-                                        ->get()
-                                        ->map(function($employee) {
-                                            return [
-                                                'id' => $employee->id,
-                                                'name' => $employee->user->name
-                                            ];
-                                        });
-        return response()->json($employees);
     });
 });

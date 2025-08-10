@@ -12,7 +12,8 @@
                     <h1 class="h3 mb-0 text-gray-800">🏪 Dashboard Analytics</h1>
                     <p class="text-muted">{{ $petshop->name }}</p>
                 </div>
-                <div class="text-end">
+                <div class="d-flex gap-2">
+                    @include('components.export-buttons', ['type' => 'petshop'])
                     <div class="badge bg-primary fs-6 me-2">
                         ⭐ {{ number_format(($avgProductRating + $avgServiceRating) / 2, 1) }} avaliação média
                     </div>
