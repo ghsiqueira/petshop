@@ -1,0 +1,709 @@
+/* ==========================================================================
+   SISTEMA DE TEMAS - MODO ESCURO/CLARO
+   ========================================================================== */
+
+/* Variáveis CSS para Tema Claro (padrão) */
+:root {
+  /* Cores Principais */
+  --primary-color: #4e73df;
+  --primary-hover: #3d5bd7;
+  --secondary-color: #858796;
+  --success-color: #1cc88a;
+  --info-color: #36b9cc;
+  --warning-color: #f6c23e;
+  --danger-color: #e74a3b;
+  
+  /* Cores de Fundo */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fc;
+  --bg-tertiary: #f1f3f6;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --bg-hover: #f8f9fa;
+  --bg-active: #e3e6f0;
+  
+  /* Cores de Texto */
+  --text-primary: #5a5c69;
+  --text-secondary: #6c757d;
+  --text-muted: #858796;
+  --text-white: #ffffff;
+  --text-dark: #3a3b45;
+  --text-heading: #2e2e2e;
+  
+  /* Bordas e Sombras */
+  --border-color: #e3e6f0;
+  --border-light: #dee2e6;
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  
+  /* Gradientes */
+  --gradient-primary: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+  --gradient-secondary: linear-gradient(180deg, #858796 10%, #60616f 100%);
+  
+  /* Navbar e Topbar */
+  --navbar-bg: #ffffff;
+  --navbar-text: #5a5c69;
+  --navbar-border: #e3e6f0;
+  --topbar-bg: #ffffff;
+  --topbar-text: #5a5c69;
+  
+  /* Sidebar */
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #5a5c69;
+  --sidebar-hover: #f8f9fc;
+  --sidebar-active: var(--primary-color);
+  --sidebar-border: #e3e6f0;
+  
+  /* Formulários */
+  --input-bg: #ffffff;
+  --input-border: #d1d3e2;
+  --input-focus: #bac8f3;
+  --input-text: #6e707e;
+  --input-placeholder: #858796;
+  
+  /* Botões */
+  --btn-primary-bg: var(--primary-color);
+  --btn-primary-hover: var(--primary-hover);
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #858796;
+  --btn-secondary-hover: #717384;
+  --btn-secondary-text: #ffffff;
+  
+  /* Cards */
+  --card-bg: #ffffff;
+  --card-border: #e3e6f0;
+  --card-shadow: var(--shadow);
+  --card-header-bg: #f8f9fc;
+  --card-header-text: var(--text-primary);
+  
+  /* Tabelas */
+  --table-bg: #ffffff;
+  --table-border: #e3e6f0;
+  --table-hover: #f8f9fa;
+  --table-striped: #f8f9fc;
+  --table-text: var(--text-primary);
+  
+  /* Dropdown */
+  --dropdown-bg: #ffffff;
+  --dropdown-border: #e3e6f0;
+  --dropdown-shadow: var(--shadow);
+  --dropdown-hover: #f8f9fa;
+  --dropdown-text: var(--text-primary);
+  
+  /* Modal */
+  --modal-bg: #ffffff;
+  --modal-header-bg: #f8f9fc;
+  --modal-border: #e3e6f0;
+  --modal-shadow: var(--shadow-lg);
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  
+  /* Alertas */
+  --alert-primary-bg: #d4edda;
+  --alert-primary-border: #c3e6cb;
+  --alert-primary-text: #155724;
+  --alert-danger-bg: #f8d7da;
+  --alert-danger-border: #f5c6cb;
+  --alert-danger-text: #721c24;
+  --alert-warning-bg: #fff3cd;
+  --alert-warning-border: #ffeaa7;
+  --alert-warning-text: #856404;
+  --alert-info-bg: #d1ecf1;
+  --alert-info-border: #bee5eb;
+  --alert-info-text: #0c5460;
+  
+  /* Gráficos */
+  --chart-grid: #e3e6f0;
+  --chart-text: var(--text-secondary);
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #e3e6f0;
+  
+  /* Transições */
+  --transition-fast: 0.15s ease-in-out;
+  --transition-normal: 0.3s ease-in-out;
+  --transition-slow: 0.5s ease-in-out;
+}
+
+/* Variáveis CSS para Tema Escuro */
+[data-theme="dark"] {
+  /* Cores Principais (mantém as mesmas para consistência) */
+  --primary-color: #4e73df;
+  --primary-hover: #5a7ce8;
+  --secondary-color: #6c757d;
+  --success-color: #1cc88a;
+  --info-color: #36b9cc;
+  --warning-color: #f6c23e;
+  --danger-color: #e74a3b;
+  
+  /* Cores de Fundo */
+  --bg-primary: #1a1d29;
+  --bg-secondary: #242940;
+  --bg-tertiary: #2d3348;
+  --bg-sidebar: #1e2139;
+  --bg-card: #242940;
+  --bg-input: #2d3348;
+  --bg-hover: #2d3348;
+  --bg-active: #3a3f5c;
+  
+  /* Cores de Texto */
+  --text-primary: #e3e6f0;
+  --text-secondary: #b7bbc8;
+  --text-muted: #858796;
+  --text-white: #ffffff;
+  --text-dark: #e3e6f0;
+  --text-heading: #ffffff;
+  
+  /* Bordas e Sombras */
+  --border-color: #3a3f5c;
+  --border-light: #3a3f5c;
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+  --shadow: 0 0.15rem 1.75rem 0 rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+  
+  /* Gradientes */
+  --gradient-primary: linear-gradient(180deg, #4e73df 10%, #3d5bd7 100%);
+  --gradient-secondary: linear-gradient(180deg, #6c757d 10%, #5a616f 100%);
+  
+  /* Navbar e Topbar */
+  --navbar-bg: #1e2139;
+  --navbar-text: #e3e6f0;
+  --navbar-border: #3a3f5c;
+  --topbar-bg: #1e2139;
+  --topbar-text: #e3e6f0;
+  
+  /* Sidebar */
+  --sidebar-bg: #1e2139;
+  --sidebar-text: #b7bbc8;
+  --sidebar-hover: #242940;
+  --sidebar-active: var(--primary-color);
+  --sidebar-border: #3a3f5c;
+  
+  /* Formulários */
+  --input-bg: #2d3348;
+  --input-border: #3a3f5c;
+  --input-focus: #4e73df;
+  --input-text: #e3e6f0;
+  --input-placeholder: #858796;
+  
+  /* Botões */
+  --btn-primary-bg: var(--primary-color);
+  --btn-primary-hover: var(--primary-hover);
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #6c757d;
+  --btn-secondary-hover: #7a8288;
+  --btn-secondary-text: #ffffff;
+  
+  /* Cards */
+  --card-bg: #242940;
+  --card-border: #3a3f5c;
+  --card-shadow: var(--shadow);
+  --card-header-bg: #2d3348;
+  --card-header-text: var(--text-primary);
+  
+  /* Tabelas */
+  --table-bg: #242940;
+  --table-border: #3a3f5c;
+  --table-hover: #2d3348;
+  --table-striped: #2d3348;
+  --table-text: var(--text-primary);
+  
+  /* Dropdown */
+  --dropdown-bg: #242940;
+  --dropdown-border: #3a3f5c;
+  --dropdown-shadow: var(--shadow);
+  --dropdown-hover: #2d3348;
+  --dropdown-text: var(--text-primary);
+  
+  /* Modal */
+  --modal-bg: #242940;
+  --modal-header-bg: #2d3348;
+  --modal-border: #3a3f5c;
+  --modal-shadow: var(--shadow-lg);
+  --modal-backdrop: rgba(0, 0, 0, 0.7);
+  
+  /* Alertas */
+  --alert-primary-bg: rgba(28, 200, 138, 0.15);
+  --alert-primary-border: rgba(28, 200, 138, 0.3);
+  --alert-primary-text: #1cc88a;
+  --alert-danger-bg: rgba(231, 74, 59, 0.15);
+  --alert-danger-border: rgba(231, 74, 59, 0.3);
+  --alert-danger-text: #e74a3b;
+  --alert-warning-bg: rgba(246, 194, 62, 0.15);
+  --alert-warning-border: rgba(246, 194, 62, 0.3);
+  --alert-warning-text: #f6c23e;
+  --alert-info-bg: rgba(54, 185, 204, 0.15);
+  --alert-info-border: rgba(54, 185, 204, 0.3);
+  --alert-info-text: #36b9cc;
+  
+  /* Gráficos */
+  --chart-grid: #3a3f5c;
+  --chart-text: var(--text-secondary);
+  --chart-tooltip-bg: #242940;
+  --chart-tooltip-border: #3a3f5c;
+}
+
+/* ==========================================================================
+   APLICAÇÃO DAS VARIÁVEIS CSS
+   ========================================================================== */
+
+/* Body e HTML */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* Textos */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-dark { color: var(--text-dark) !important; }
+.text-white { color: var(--text-white) !important; }
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-heading);
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+  box-shadow: var(--card-shadow);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+.card-header {
+  background-color: var(--card-header-bg);
+  border-bottom-color: var(--card-border);
+  color: var(--card-header-text);
+}
+
+.card-body {
+  color: var(--text-primary);
+}
+
+/* Formulários */
+.form-control {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--input-text);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+.form-control::placeholder {
+  color: var(--input-placeholder);
+}
+
+.form-control:focus {
+  background-color: var(--input-bg);
+  border-color: var(--input-focus);
+  color: var(--input-text);
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.form-select {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--input-text);
+}
+
+.form-label {
+  color: var(--text-primary);
+}
+
+/* Botões */
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+}
+
+.btn-primary:hover {
+  background-color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--btn-secondary-bg);
+  border-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+}
+
+.btn-secondary:hover {
+  background-color: var(--btn-secondary-hover);
+  border-color: var(--btn-secondary-hover);
+}
+
+.btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--text-white);
+}
+
+.btn-outline-secondary {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--text-secondary);
+  border-color: var(--text-secondary);
+  color: var(--text-white);
+}
+
+/* Tabelas */
+.table {
+  color: var(--table-text);
+  background-color: var(--table-bg);
+}
+
+.table th {
+  border-color: var(--table-border);
+  background-color: var(--card-header-bg);
+  color: var(--card-header-text);
+}
+
+.table td {
+  border-color: var(--table-border);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td,
+.table-striped > tbody > tr:nth-of-type(odd) > th {
+  background-color: var(--table-striped);
+}
+
+.table-hover > tbody > tr:hover > td,
+.table-hover > tbody > tr:hover > th {
+  background-color: var(--table-hover);
+}
+
+/* Dropdowns */
+.dropdown-menu {
+  background-color: var(--dropdown-bg);
+  border-color: var(--dropdown-border);
+  box-shadow: var(--dropdown-shadow);
+}
+
+.dropdown-item {
+  color: var(--dropdown-text);
+}
+
+.dropdown-item:hover {
+  background-color: var(--dropdown-hover);
+  color: var(--dropdown-text);
+}
+
+.dropdown-divider {
+  border-color: var(--border-color);
+}
+
+/* Modais */
+.modal-content {
+  background-color: var(--modal-bg);
+  border-color: var(--modal-border);
+}
+
+.modal-header {
+  background-color: var(--modal-header-bg);
+  border-bottom-color: var(--modal-border);
+}
+
+.modal-footer {
+  border-top-color: var(--modal-border);
+}
+
+.modal-backdrop {
+  background-color: var(--modal-backdrop);
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--navbar-bg) !important;
+  border-color: var(--navbar-border);
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: var(--navbar-text) !important;
+}
+
+.navbar .nav-link:hover {
+  color: var(--primary-color) !important;
+}
+
+/* Sidebar (se tiver) */
+.sidebar {
+  background-color: var(--sidebar-bg);
+  border-color: var(--sidebar-border);
+}
+
+.sidebar .nav-link {
+  color: var(--sidebar-text);
+  transition: background-color var(--transition-fast);
+}
+
+.sidebar .nav-link:hover {
+  background-color: var(--sidebar-hover);
+  color: var(--text-primary);
+}
+
+.sidebar .nav-link.active {
+  background-color: var(--sidebar-active);
+  color: var(--text-white);
+}
+
+/* Alertas */
+.alert-success {
+  background-color: var(--alert-primary-bg);
+  border-color: var(--alert-primary-border);
+  color: var(--alert-primary-text);
+}
+
+.alert-danger {
+  background-color: var(--alert-danger-bg);
+  border-color: var(--alert-danger-border);
+  color: var(--alert-danger-text);
+}
+
+.alert-warning {
+  background-color: var(--alert-warning-bg);
+  border-color: var(--alert-warning-border);
+  color: var(--alert-warning-text);
+}
+
+.alert-info {
+  background-color: var(--alert-info-bg);
+  border-color: var(--alert-info-border);
+  color: var(--alert-info-text);
+}
+
+/* Bordas */
+.border {
+  border-color: var(--border-color) !important;
+}
+
+.border-top {
+  border-top-color: var(--border-color) !important;
+}
+
+.border-bottom {
+  border-bottom-color: var(--border-color) !important;
+}
+
+.border-left {
+  border-left-color: var(--border-color) !important;
+}
+
+.border-right {
+  border-right-color: var(--border-color) !important;
+}
+
+/* Backgrounds especiais */
+.bg-light {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary);
+}
+
+.bg-white {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+.bg-gray-100 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* ==========================================================================
+   TOGGLE SWITCH PARA TEMA
+   ========================================================================== */
+
+.theme-toggle {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+}
+
+.theme-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.theme-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 30px;
+}
+
+.theme-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.theme-toggle input:checked + .theme-toggle-slider {
+  background-color: var(--primary-color);
+}
+
+.theme-toggle input:checked + .theme-toggle-slider:before {
+  transform: translateX(30px);
+}
+
+/* Ícones no toggle */
+.theme-toggle-slider::after {
+  content: '☀️';
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  font-size: 14px;
+}
+
+.theme-toggle input:checked + .theme-toggle-slider::after {
+  content: '🌙';
+  left: auto;
+  right: 8px;
+}
+
+/* ==========================================================================
+   ANIMAÇÕES E TRANSIÇÕES
+   ========================================================================== */
+
+/* Transição suave para mudança de tema */
+*,
+*::before,
+*::after {
+  transition: background-color var(--transition-normal), 
+              color var(--transition-normal), 
+              border-color var(--transition-normal),
+              box-shadow var(--transition-normal);
+}
+
+/* Hover effects */
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn {
+  transition: all var(--transition-fast);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   CLASSES UTILITÁRIAS PARA TEMA
+   ========================================================================== */
+
+.theme-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.theme-bg-card {
+  background-color: var(--card-bg);
+}
+
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-text-heading {
+  color: var(--text-heading);
+}
+
+.theme-border {
+  border-color: var(--border-color);
+}
+
+.theme-shadow {
+  box-shadow: var(--shadow);
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .theme-toggle {
+    width: 50px;
+    height: 25px;
+  }
+  
+  .theme-toggle-slider:before {
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+  }
+  
+  .theme-toggle input:checked + .theme-toggle-slider:before {
+    transform: translateX(25px);
+  }
+}
+
+/* ==========================================================================
+   GRÁFICOS (CHART.JS)
+   ========================================================================== */
+
+/* Ajustar cores dos gráficos para tema escuro */
+[data-theme="dark"] .chart-container canvas {
+  filter: brightness(0.9);
+}
+
+/* ==========================================================================
+   SCROLLBARS PERSONALIZADAS
+   ========================================================================== */
+
+/* Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-muted) var(--bg-secondary);
+}
