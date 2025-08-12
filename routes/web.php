@@ -18,12 +18,14 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PetshopController as AdminPetshopController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +47,16 @@ Route::get('/petshops/{petshop}', [PetshopController::class, 'show'])->name('pet
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 Route::get('/services/{service}', [ServiceController::class, 'show'])->name('services.show');
 
+// Rotas de Busca
+Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
+Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
+
+// Rota para busca rápida na barra de navegação
+Route::get('/quick-search', function(Request $request) {
+    return redirect()->route('search.index', $request->all());
+})->name('quick-search');
+
 // Rotas do carrinho
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
@@ -61,9 +73,22 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard principal (redireciona para o dashboard específico do papel)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Perfil
+    // ==================== ROTAS DE PERFIL ====================
+    
+    // Perfil - Rotas básicas
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/advanced', [ProfileController::class, 'updateAdvanced'])->name('profile.update.advanced');
+    
+    // Perfil - Upload de fotos
+    Route::post('/profile/upload-photo', [ProfileController::class, 'uploadPhoto'])->name('profile.upload-photo');
+    Route::delete('/profile/delete-photo', [ProfileController::class, 'deletePhoto'])->name('profile.delete-photo');
+    
+    // Perfil - Exportação de dados
+    Route::get('/profile/export/{format?}', [ProfileController::class, 'export'])->name('profile.export');
+    
+    // ==================== FIM ROTAS PERFIL ====================
     
     // Lista de desejos (wishlist)
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');

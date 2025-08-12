@@ -32,6 +32,33 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
+    <!-- CSS adicional para avatars -->
+    <style>
+        .user-avatar {
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.05);
+            border-color: rgba(255,255,255,0.4);
+        }
+        
+        .avatar-initials {
+            background: linear-gradient(135deg, #4e73df, #224abe);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .dropdown-menu .user-avatar {
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .dropdown-menu .user-avatar:hover {
+            border-color: rgba(0,0,0,0.2);
+        }
+    </style>
+
     <!-- Preload do script de tema para evitar flash -->
     <script>
         // Script inline para aplicar tema antes do DOM carregar (evita flash)
@@ -242,16 +269,33 @@
                             <!-- Menu do Usuário -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
+                                    <!-- Avatar do usuário na navbar -->
                                     <div class="me-2">
-                                        @if(auth()->user()->profile_photo)
-                                            <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
+                                        @if(auth()->user()->profile_picture && Storage::disk('public')->exists(auth()->user()->profile_picture))
+                                            <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" 
                                                  alt="{{ auth()->user()->name }}" 
-                                                 class="rounded-circle"
-                                                 style="width: 32px; height: 32px; object-fit: cover;">
-                                        @else
-                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                                 class="rounded-circle user-avatar"
+                                                 style="width: 32px; height: 32px; object-fit: cover;"
+                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <!-- Fallback caso a imagem falhe -->
+                                            <div class="rounded-circle avatar-initials d-none align-items-center justify-content-center"
                                                  style="width: 32px; height: 32px; font-size: 14px;">
-                                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                                {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                                            </div>
+                                        @else
+                                            <div class="rounded-circle avatar-initials d-flex align-items-center justify-content-center user-avatar"
+                                                 style="width: 32px; height: 32px; font-size: 14px;">
+                                                @php
+                                                    $words = explode(' ', auth()->user()->name);
+                                                    $initials = '';
+                                                    foreach($words as $word) {
+                                                        if(!empty($word)) {
+                                                            $initials .= strtoupper(substr($word, 0, 1));
+                                                        }
+                                                        if(strlen($initials) >= 2) break;
+                                                    }
+                                                @endphp
+                                                {{ $initials ?: 'U' }}
                                             </div>
                                         @endif
                                     </div>
@@ -260,15 +304,42 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li class="dropdown-header">
                                         <div class="text-center">
-                                            @if(auth()->user()->profile_photo)
-                                                <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
+                                            <!-- Avatar maior no dropdown -->
+                                            @if(auth()->user()->profile_picture && Storage::disk('public')->exists(auth()->user()->profile_picture))
+                                                <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}" 
                                                      alt="{{ auth()->user()->name }}" 
-                                                     class="rounded-circle mb-2"
-                                                     style="width: 60px; height: 60px; object-fit: cover;">
-                                            @else
-                                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-2"
+                                                     class="rounded-circle user-avatar mb-2"
+                                                     style="width: 60px; height: 60px; object-fit: cover;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <!-- Fallback caso a imagem falhe -->
+                                                <div class="rounded-circle avatar-initials d-none align-items-center justify-content-center mx-auto mb-2"
                                                      style="width: 60px; height: 60px; font-size: 24px;">
-                                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                                    @php
+                                                        $words = explode(' ', auth()->user()->name);
+                                                        $initials = '';
+                                                        foreach($words as $word) {
+                                                            if(!empty($word)) {
+                                                                $initials .= strtoupper(substr($word, 0, 1));
+                                                            }
+                                                            if(strlen($initials) >= 2) break;
+                                                        }
+                                                    @endphp
+                                                    {{ $initials ?: 'U' }}
+                                                </div>
+                                            @else
+                                                <div class="rounded-circle avatar-initials d-flex align-items-center justify-content-center mx-auto mb-2 user-avatar"
+                                                     style="width: 60px; height: 60px; font-size: 24px;">
+                                                    @php
+                                                        $words = explode(' ', auth()->user()->name);
+                                                        $initials = '';
+                                                        foreach($words as $word) {
+                                                            if(!empty($word)) {
+                                                                $initials .= strtoupper(substr($word, 0, 1));
+                                                            }
+                                                            if(strlen($initials) >= 2) break;
+                                                        }
+                                                    @endphp
+                                                    {{ $initials ?: 'U' }}
                                                 </div>
                                             @endif
                                             <div><strong>{{ auth()->user()->name }}</strong></div>
@@ -456,9 +527,23 @@
     <!-- Scripts customizados da página -->
     @stack('scripts')
 
-    <!-- Script para atualizar indicador de tema -->
+    <!-- Script adicional para atualizar avatar após upload -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Função para atualizar avatar em tempo real
+            window.updateUserAvatar = function(newPhotoUrl) {
+                const avatarImages = document.querySelectorAll('img[alt="{{ auth()->user()->name ?? '' }}"]');
+                avatarImages.forEach(img => {
+                    img.src = newPhotoUrl;
+                    img.style.display = 'block';
+                    // Ocultar fallback se estiver visível
+                    const fallback = img.nextElementSibling;
+                    if (fallback && fallback.classList.contains('avatar-initials')) {
+                        fallback.style.display = 'none';
+                    }
+                });
+            };
+
             // Atualizar indicador de tema
             function updateThemeIndicator() {
                 const indicator = document.getElementById('current-theme-indicator');
@@ -513,39 +598,7 @@
                 @endif
             @endauth
 
-            // Smooth scroll para links âncora
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                });
-            });
-
-            // Adicionar classe para animações de entrada
-            const animatedElements = document.querySelectorAll('.card, .alert, .btn');
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            });
-
-            animatedElements.forEach(el => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(20px)';
-                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(el);
-            });
-
-            console.log('🚀 Layout carregado com sucesso!');
+            console.log('🚀 Layout com avatars carregado com sucesso!');
         });
 
         // Função global para mostrar notificação toast
