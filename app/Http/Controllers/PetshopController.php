@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 
 class PetshopController extends Controller
 {
@@ -197,26 +198,47 @@ class PetshopController extends Controller
             'logo' => 'nullable|image|max:2048',
         ]);
         
+        // Atualizar campos básicos
         $petshop->name = $request->name;
         $petshop->description = $request->description;
         $petshop->address = $request->address;
         $petshop->phone = $request->phone;
         $petshop->email = $request->email;
-        $petshop->opening_hours = $request->opening_hours;
         
-        if ($request->hasFile('logo')) {
-            // Excluir logo antigo se existir
-            if ($petshop->logo) {
-                Storage::disk('public')->delete($petshop->logo);
-            }
-            
-            $path = $request->file('logo')->store('petshops', 'public');
-            $petshop->logo = $path;
+        // Verificar se a coluna opening_hours existe antes de tentar atualizar
+        if (Schema::hasColumn('petshops', 'opening_hours')) {
+            $petshop->opening_hours = $request->opening_hours;
         }
         
-        $petshop->save();
+        // Tratamento do upload da logo
+        if ($request->hasFile('logo')) {
+            try {
+                // Excluir logo antigo se existir
+                if ($petshop->logo && Storage::disk('public')->exists($petshop->logo)) {
+                    Storage::disk('public')->delete($petshop->logo);
+                }
+                
+                // Fazer upload da nova logo
+                $path = $request->file('logo')->store('petshops', 'public');
+                $petshop->logo = $path;
+                
+            } catch (\Exception $e) {
+                return redirect()->back()
+                            ->with('error', 'Erro ao fazer upload da logo: ' . $e->getMessage())
+                            ->withInput();
+            }
+        }
         
-        return redirect()->route('petshop.dashboard')
-                         ->with('success', 'Informações atualizadas com sucesso!');
+        try {
+            $petshop->save();
+            
+            return redirect()->route('petshop.dashboard')
+                            ->with('success', 'Informações atualizadas com sucesso!');
+                            
+        } catch (\Exception $e) {
+            return redirect()->back()
+                        ->with('error', 'Erro ao salvar as informações: ' . $e->getMessage())
+                        ->withInput();
+        }
     }
 }

@@ -121,34 +121,38 @@
                                     </ul>
                                 </li>
                             @elseif(auth()->user()->hasRole('petshop'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('analytics.petshop') }}">
-                                        <i class="fas fa-chart-line me-1"></i>Dashboard
-                                    </a>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                                        <i class="fas fa-store me-1"></i>Meu Pet Shop
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="{{ route('petshop.products.index') }}">
-                                            <i class="fas fa-box me-2"></i>Produtos
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('petshop.services.index') }}">
-                                            <i class="fas fa-cut me-2"></i>Serviços
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('petshop.employees.index') }}">
-                                            <i class="fas fa-users me-2"></i>Funcionários
-                                        </a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="{{ route('petshop.orders') }}">
-                                            <i class="fas fa-shopping-bag me-2"></i>Pedidos
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('petshop.appointments') }}">
-                                            <i class="fas fa-calendar me-2"></i>Agendamentos
-                                        </a></li>
-                                    </ul>
-                                </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('petshop.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                    <i class="fas fa-store me-1"></i>Meu Pet Shop
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ route('petshop.products.index') }}">
+                                        <i class="fas fa-box me-2"></i>Produtos
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.services.index') }}">
+                                        <i class="fas fa-cut me-2"></i>Serviços
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.employees.index') }}">
+                                        <i class="fas fa-users me-2"></i>Funcionários
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.orders') }}">
+                                        <i class="fas fa-shopping-bag me-2"></i>Pedidos
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.appointments') }}">
+                                        <i class="fas fa-calendar me-2"></i>Agendamentos
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-success" href="{{ route('analytics.petshop') }}">
+                                        <i class="fas fa-chart-pie me-2"></i>Relatórios e Gráficos
+                                    </a></li>
+                                </ul>
+                            </li>
                             @elseif(auth()->user()->hasRole('employee'))
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('analytics.employee') }}">

@@ -137,23 +137,25 @@ class ProductController extends Controller
             abort(404, 'Produto não encontrado');
         }
         
+        // Carregar relacionamentos básicos
         $product->load(['petshop']);
         
-        // Carregar reviews apenas se a relação existir
+        // Carregar reviews com usuários - tratamento para caso a tabela não exista
         try {
-            $product->load('reviews');
+            $reviews = $product->reviews()->with('user')->orderBy('created_at', 'desc')->get();
         } catch (\Exception $e) {
-            // Ignorar se a relação reviews não existir
+            // Se a tabela reviews não existir ou houver erro, criar collection vazia
+            $reviews = collect();
         }
         
         // Produtos relacionados (mesma categoria)
         $relatedProducts = Product::where('category', $product->category)
-                                 ->where('id', '!=', $product->id)
-                                 ->where('is_active', true)
-                                 ->take(4)
-                                 ->get();
+                            ->where('id', '!=', $product->id)
+                            ->where('is_active', true)
+                            ->take(4)
+                            ->get();
         
-        return view('products.show', compact('product', 'relatedProducts'));
+        return view('products.show', compact('product', 'relatedProducts', 'reviews'));
     }
     
     // Métodos para petshop (se necessário)
