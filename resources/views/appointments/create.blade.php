@@ -1,3 +1,4 @@
+{{-- resources/views/appointments/create.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Novo Agendamento')
@@ -14,7 +15,10 @@
     
     <div class="card">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Novo Agendamento</h5>
+            <h5 class="mb-0">
+                <i class="fas fa-calendar-plus me-2"></i>
+                Novo Agendamento
+            </h5>
         </div>
         <div class="card-body">
             <form action="{{ route('appointments.store') }}" method="POST">
@@ -37,7 +41,9 @@
                         
                         @if($pets->isEmpty())
                             <div class="mt-2">
-                                <a href="{{ route('pets.create') }}">Cadastre um pet primeiro</a>
+                                <a href="{{ route('pets.create') }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i>Cadastre um pet primeiro
+                                </a>
                             </div>
                         @endif
                     </div>
@@ -80,35 +86,66 @@
                     </div>
                 </div>
                 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="appointment_date" class="form-label">Data*</label>
-                        <input type="date" class="form-control @error('appointment_date') is-invalid @enderror" id="appointment_date" name="appointment_date" value="{{ old('appointment_date') }}" min="{{ date('Y-m-d') }}" required>
-                        @error('appointment_date')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label for="appointment_time" class="form-label">Horário*</label>
-                        <input type="time" class="form-control @error('appointment_time') is-invalid @enderror" id="appointment_time" name="appointment_time" value="{{ old('appointment_time') }}" required>
-                        @error('appointment_time')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
+                {{-- Usando o componente de data e horário --}}
+                @include('components.datetime-picker', [
+                    'dateId' => 'appointment_date',
+                    'timeId' => 'appointment_time',
+                    'dateLabel' => 'Data do Agendamento',
+                    'timeLabel' => 'Horário do Agendamento',
+                    'dateValue' => old('appointment_date'),
+                    'timeValue' => old('appointment_time'),
+                    'required' => true
+                ])
                 
                 <div class="mb-3">
                     <label for="notes" class="form-label">Observações</label>
-                    <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
+                    <textarea class="form-control @error('notes') is-invalid @enderror" 
+                              id="notes" 
+                              name="notes" 
+                              rows="3" 
+                              placeholder="Adicione informações especiais sobre o agendamento...">{{ old('notes') }}</textarea>
                     @error('notes')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
                 
+                {{-- Preview do agendamento --}}
+                <div class="card bg-light mb-4" id="appointment-preview" style="display: none;">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-eye me-2"></i>
+                            Resumo do Agendamento
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Pet:</strong>
+                                <div id="preview-pet" class="text-muted">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Serviço:</strong>
+                                <div id="preview-service" class="text-muted">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Data:</strong>
+                                <div id="preview-date" class="text-muted">-</div>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Horário:</strong>
+                                <div id="preview-time" class="text-muted">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <a href="{{ route('appointments.index') }}" class="btn btn-outline-secondary me-md-2">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Agendar</button>
+                    <a href="{{ route('appointments.index') }}" class="btn btn-outline-secondary me-md-2">
+                        <i class="fas fa-arrow-left me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        <i class="fas fa-calendar-check me-1"></i>Agendar
+                    </button>
                 </div>
             </form>
         </div>
@@ -116,12 +153,19 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const petshopSelect = document.getElementById('petshop_id');
         const serviceSelect = document.getElementById('service_id');
         const employeeSelect = document.getElementById('employee_id');
+        
+        // Elements for preview
+        const petSelect = document.getElementById('pet_id');
+        const dateInput = document.getElementById('appointment_date');
+        const timeInput = document.getElementById('appointment_time');
+        const previewCard = document.getElementById('appointment-preview');
+        const submitBtn = document.getElementById('submit-btn');
         
         // Função para mostrar erros no console e na interface
         function handleApiError(element, error, message) {
@@ -135,22 +179,17 @@
             const petshopId = this.value;
             
             if (petshopId) {
-                // Limpar e desabilitar selects
                 serviceSelect.disabled = true;
                 serviceSelect.innerHTML = '<option value="" selected disabled>Carregando...</option>';
                 employeeSelect.innerHTML = '<option value="" selected disabled>Selecione o serviço primeiro...</option>';
                 employeeSelect.disabled = true;
                 
-                // Adicionar token CSRF ao cabeçalho
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                
-                // Usar fetch API para buscar serviços
                 fetch(`/api/petshops/${petshopId}/services`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
                 })
                 .then(response => {
@@ -166,7 +205,7 @@
                         data.forEach(service => {
                             const option = document.createElement('option');
                             option.value = service.id;
-                            option.textContent = `${service.name} - R$ ${parseFloat(service.price).toFixed(2).replace('.', ',')}`;
+                            option.textContent = `${service.name} - R$ ${parseFloat(service.price).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ',')}`;
                             serviceSelect.appendChild(option);
                         });
                         
@@ -195,16 +234,12 @@
                 employeeSelect.disabled = true;
                 employeeSelect.innerHTML = '<option value="" selected disabled>Carregando...</option>';
                 
-                // Adicionar token CSRF ao cabeçalho
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                
-                // Usar fetch API para buscar funcionários
                 fetch(`/api/petshops/${petshopId}/employees`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     }
                 })
                 .then(response => {
@@ -237,6 +272,54 @@
                 employeeSelect.disabled = true;
             }
         });
+        
+        // Função para atualizar o preview
+        function updatePreview() {
+            const pet = petSelect.options[petSelect.selectedIndex]?.text || '-';
+            const service = serviceSelect.options[serviceSelect.selectedIndex]?.text || '-';
+            const date = dateInput.value || '-';
+            const time = timeInput.value || '-';
+            
+            document.getElementById('preview-pet').textContent = pet !== 'Selecione seu pet...' ? pet : '-';
+            document.getElementById('preview-service').textContent = service !== 'Selecione um serviço...' ? service : '-';
+            document.getElementById('preview-date').textContent = date;
+            document.getElementById('preview-time').textContent = time;
+            
+            // Mostrar preview se pelo menos um campo estiver preenchido
+            const hasData = pet !== '-' && pet !== 'Selecione seu pet...' || 
+                           service !== '-' && service !== 'Selecione um serviço...' ||
+                           date !== '-' || time !== '-';
+            
+            previewCard.style.display = hasData ? 'block' : 'none';
+            
+            // Habilitar/desabilitar botão de submit
+            const allFilled = petSelect.value && serviceSelect.value && employeeSelect.value && date !== '-' && time !== '-';
+            submitBtn.disabled = !allFilled;
+            
+            if (allFilled) {
+                submitBtn.classList.remove('btn-outline-primary');
+                submitBtn.classList.add('btn-primary');
+            } else {
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-outline-primary');
+            }
+        }
+        
+        // Event listeners para o preview
+        [petSelect, serviceSelect, employeeSelect, dateInput, timeInput].forEach(element => {
+            if (element) {
+                element.addEventListener('change', updatePreview);
+            }
+        });
+        
+        // Atualizar preview inicial
+        updatePreview();
+        
+        // Adicionar loading ao submit
+        document.querySelector('form').addEventListener('submit', function() {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Agendando...';
+            submitBtn.disabled = true;
+        });
     });
 </script>
-@endsection
+@endpush
