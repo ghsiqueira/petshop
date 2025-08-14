@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             OrderSeeder::class,        
             ReviewSeeder::class,        
             AppointmentSeeder::class,
+            BusinessHoursSeeder::class
         ]);
     }
 }

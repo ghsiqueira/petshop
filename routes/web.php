@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PetshopController as AdminPetshopController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Petshop\BusinessHoursController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -201,6 +202,15 @@ Route::middleware(['auth'])->group(function () {
 
         // Funcionários
         Route::resource('petshop/employees', EmployeeManagementController::class)->names('petshop.employees');
+
+        // ============ NOVAS ROTAS DE HORÁRIOS DE FUNCIONAMENTO ============
+        // Horários de funcionamento
+        Route::get('/petshop/business-hours', [BusinessHoursController::class, 'index'])
+            ->name('petshop.business-hours.index');
+        Route::put('/petshop/business-hours', [BusinessHoursController::class, 'update'])
+            ->name('petshop.business-hours.update');
+        Route::get('/petshop/business-hours/test', [BusinessHoursController::class, 'testConfiguration'])
+            ->name('petshop.business-hours.test');
 
         // Pedidos
         Route::get('/petshop/orders', [PetshopController::class, 'orders'])->name('petshop.orders');

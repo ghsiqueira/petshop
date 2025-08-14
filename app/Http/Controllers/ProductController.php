@@ -170,17 +170,28 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'category' => 'required|string|max:100',
+            'category' => 'required|in:racao,petiscos,brinquedos,higiene,acessorios,medicamentos,outros',
             'image' => 'nullable|image|max:2048'
         ];
         
-        // Adicionar validação para campos opcionais se existirem
+        // Adicionar validação para campos opcionais
         if (Schema::hasColumn('products', 'brand')) {
             $rules['brand'] = 'nullable|string|max:100';
         }
         
-        if (Schema::hasColumn('products', 'quantity')) {
-            $rules['quantity'] = 'required|integer|min:0';
+        // Campo stock é obrigatório
+        $rules['stock_quantity'] = 'required|integer|min:0';
+        
+        if (Schema::hasColumn('products', 'minimum_stock')) {
+            $rules['minimum_stock'] = 'nullable|integer|min:0';
+        }
+        
+        if (Schema::hasColumn('products', 'sku')) {
+            $rules['sku'] = 'nullable|string|max:100';
+        }
+        
+        if (Schema::hasColumn('products', 'weight')) {
+            $rules['weight'] = 'nullable|numeric|min:0';
         }
         
         $validated = $request->validate($rules);
@@ -189,17 +200,29 @@ class ProductController extends Controller
             $validated['image'] = $request->file('image')->store('products', 'public');
         }
         
-        // Adicionar petshop_id se o usuário for um petshop
+        // Adicionar petshop_id
         if (auth()->user() && auth()->user()->petshop) {
             $validated['petshop_id'] = auth()->user()->petshop->id;
         }
         
-        $validated['is_active'] = true;
+        // Mapear campos do formulário para o banco (OBRIGATÓRIO)
+        $validated['stock'] = $validated['stock_quantity'];
+        unset($validated['stock_quantity']);
         
-        Product::create($validated);
+        $validated['is_active'] = $request->has('is_active');
         
-        return redirect()->route('products.index')
-                        ->with('success', 'Produto criado com sucesso!');
+        if ($request->has('featured') && Schema::hasColumn('products', 'featured')) {
+            $validated['featured'] = true;
+        }
+        
+        try {
+            Product::create($validated);
+            
+            return redirect()->route('petshop.products.index')
+                            ->with('success', 'Produto criado com sucesso!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Erro ao criar produto: ' . $e->getMessage()])->withInput();
+        }
     }
     
     public function edit(Product $product)

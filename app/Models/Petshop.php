@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Searchable;
+use Carbon\Carbon;
 
 class Petshop extends Model
 {
@@ -36,7 +37,14 @@ class Petshop extends Model
         'delivery_radius',
         'minimum_order_value',
         'delivery_fee',
-        'free_delivery_minimum'
+        'free_delivery_minimum',
+        // ============ NOVOS CAMPOS ADICIONADOS ============
+        'business_hours',
+        'slot_duration',
+        'advance_booking_days',
+        'allow_weekend_booking',
+        'lunch_break_start',
+        'lunch_break_end'
     ];
 
     protected $casts = [
@@ -52,7 +60,12 @@ class Petshop extends Model
         'opening_hours' => 'array',
         'images' => 'array',
         'amenities' => 'array',
-        'accepted_species' => 'array'
+        'accepted_species' => 'array',
+        // ============ NOVOS CASTS ADICIONADOS ============
+        'business_hours' => 'array',
+        'allow_weekend_booking' => 'boolean',
+        'lunch_break_start' => 'datetime:H:i',
+        'lunch_break_end' => 'datetime:H:i',
     ];
 
     protected $appends = [
@@ -61,7 +74,7 @@ class Petshop extends Model
         'is_open_now'
     ];
 
-    // Relacionamentos
+    // ============ RELACIONAMENTOS EXISTENTES ============
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -99,7 +112,7 @@ class Petshop extends Model
         return $this->morphMany(Review::class, 'reviewable');
     }
 
-    // Accessors
+    // ============ ACCESSORS EXISTENTES ============
     public function getLogoUrlAttribute()
     {
         if ($this->logo) {
@@ -138,7 +151,82 @@ class Petshop extends Model
         return $currentTime >= $todayHours['open'] && $currentTime <= $todayHours['close'];
     }
 
-    // Scopes
+    // ============ NOVOS MÉTODOS PARA HORÁRIOS DE FUNCIONAMENTO ============
+    
+    /**
+     * Obter horários de funcionamento para agendamentos
+     */
+    public function getBusinessHours()
+    {
+        return $this->business_hours ?? $this->getDefaultBusinessHours();
+    }
+
+    /**
+     * Horários padrão se não estiver configurado
+     */
+    public function getDefaultBusinessHours()
+    {
+        return [
+            'monday' => ['open' => '08:00', 'close' => '18:00', 'enabled' => true],
+            'tuesday' => ['open' => '08:00', 'close' => '18:00', 'enabled' => true],
+            'wednesday' => ['open' => '08:00', 'close' => '18:00', 'enabled' => true],
+            'thursday' => ['open' => '08:00', 'close' => '18:00', 'enabled' => true],
+            'friday' => ['open' => '08:00', 'close' => '18:00', 'enabled' => true],
+            'saturday' => ['open' => '08:00', 'close' => '16:00', 'enabled' => true],
+            'sunday' => ['open' => '09:00', 'close' => '15:00', 'enabled' => false],
+        ];
+    }
+
+    /**
+     * Verificar se está aberto em um dia da semana
+     */
+    public function isOpenOnDay($dayOfWeek)
+    {
+        $businessHours = $this->getBusinessHours();
+        $day = strtolower($dayOfWeek);
+        
+        return isset($businessHours[$day]) && $businessHours[$day]['enabled'];
+    }
+
+    /**
+     * Obter horários de abertura/fechamento de um dia
+     */
+    public function getOpeningHours($dayOfWeek)
+    {
+        $businessHours = $this->getBusinessHours();
+        $day = strtolower($dayOfWeek);
+        
+        if (!$this->isOpenOnDay($day)) {
+            return null;
+        }
+
+        return [
+            'open' => $businessHours[$day]['open'],
+            'close' => $businessHours[$day]['close']
+        ];
+    }
+
+    /**
+     * Verificar se está no horário de almoço
+     */
+    public function isInLunchBreak($time)
+    {
+        if (!$this->lunch_break_start || !$this->lunch_break_end) {
+            return false;
+        }
+
+        try {
+            $lunchStart = Carbon::createFromFormat('H:i', $this->lunch_break_start);
+            $lunchEnd = Carbon::createFromFormat('H:i', $this->lunch_break_end);
+            $checkTime = Carbon::createFromFormat('H:i', $time);
+
+            return $checkTime->between($lunchStart, $lunchEnd);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    // ============ SCOPES EXISTENTES ============
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
@@ -158,13 +246,13 @@ class Petshop extends Model
                     ->where('delivery_radius', '>', 0);
     }
 
-    // Implementação do Trait Searchable
+    // ============ IMPLEMENTAÇÃO DO TRAIT SEARCHABLE ============
     protected function getSearchableFields(): array
     {
         return ['name', 'description', 'address', 'city', 'state'];
     }
 
-    // Métodos auxiliares
+    // ============ MÉTODOS AUXILIARES EXISTENTES ============
     public function updateRating()
     {
         $reviews = $this->reviews()->where('status', 'approved');

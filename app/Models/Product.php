@@ -16,7 +16,7 @@ class Product extends Model
         'description',
         'price',
         'cost_price',
-        'quantity',
+        'stock',
         'category',
         'brand',
         'sku',
@@ -118,11 +118,11 @@ class Product extends Model
 
     public function getStockStatusAttribute()
     {
-        if ($this->quantity <= 0) {
+        if ($this->stock <= 0) {
             return 'out_of_stock';
         }
         
-        if ($this->quantity <= $this->minimum_stock) {
+        if ($this->stock <= $this->minimum_stock) {
             return 'low_stock';
         }
         
@@ -137,12 +137,12 @@ class Product extends Model
 
     public function scopeInStock($query)
     {
-        return $query->where('quantity', '>', 0);
+        return $query->where('stock', '>', 0);
     }
 
     public function scopeLowStock($query)
     {
-        return $query->whereColumn('quantity', '<=', 'minimum_stock');
+        return $query->whereColumn('stock', '<=', 'minimum_stock');
     }
 
     public function scopeOnSale($query)
@@ -175,13 +175,13 @@ class Product extends Model
 
     public function canPurchase($quantity = 1)
     {
-        return $this->is_active && $this->quantity >= $quantity;
+        return $this->is_active && $this->stock >= $quantity;
     }
 
     public function decreaseStock($quantity)
     {
-        if ($this->quantity >= $quantity) {
-            $this->quantity -= $quantity;
+        if ($this->stock >= $quantity) {
+            $this->stock -= $quantity;
             $this->save();
             return true;
         }
@@ -191,7 +191,7 @@ class Product extends Model
 
     public function increaseStock($quantity)
     {
-        $this->quantity += $quantity;
+        $this->stock += $quantity;
         $this->save();
     }
 }

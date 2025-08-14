@@ -121,35 +121,103 @@
                                     </ul>
                                 </li>
                             @elseif(auth()->user()->hasRole('petshop'))
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('petshop.dashboard') }}">
-                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                                </a>
-                            </li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                                    <i class="fas fa-store me-1"></i>Meu Pet Shop
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-store me-2"></i>
+                                    <span>Meu Pet Shop</span>
+                                    <span class="badge bg-success ms-2 small">Gestão</span>
                                 </a>
-                                <ul class="dropdown-menu">
+                                <ul class="dropdown-menu dropdown-menu-end shadow">
+                                    <!-- Dashboard -->
+                                    <li>
+                                        <h6 class="dropdown-header">
+                                            <i class="fas fa-chart-pie me-2"></i>Dashboard
+                                        </h6>
+                                    </li>
+                                    <li><a class="dropdown-item" href="{{ route('analytics.petshop') }}">
+                                        <i class="fas fa-tachometer-alt me-2 text-primary"></i>Painel Principal
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.dashboard') }}">
+                                        <i class="fas fa-chart-bar me-2 text-info"></i>Dashboard Clássico
+                                    </a></li>
+                                    
+                                    <li><hr class="dropdown-divider"></li>
+                                    
+                                    <!-- Gestão de Produtos e Serviços -->
+                                    <li>
+                                        <h6 class="dropdown-header">
+                                            <i class="fas fa-boxes me-2"></i>Produtos & Serviços
+                                        </h6>
+                                    </li>
                                     <li><a class="dropdown-item" href="{{ route('petshop.products.index') }}">
-                                        <i class="fas fa-box me-2"></i>Produtos
+                                        <i class="fas fa-box me-2 text-success"></i>Produtos
                                     </a></li>
                                     <li><a class="dropdown-item" href="{{ route('petshop.services.index') }}">
-                                        <i class="fas fa-cut me-2"></i>Serviços
+                                        <i class="fas fa-cut me-2 text-warning"></i>Serviços
                                     </a></li>
                                     <li><a class="dropdown-item" href="{{ route('petshop.employees.index') }}">
-                                        <i class="fas fa-users me-2"></i>Funcionários
+                                        <i class="fas fa-users me-2 text-info"></i>Funcionários
                                     </a></li>
+                                    
                                     <li><hr class="dropdown-divider"></li>
+                                    
+                                    <!-- Configurações -->
+                                    <li>
+                                        <h6 class="dropdown-header">
+                                            <i class="fas fa-cogs me-2"></i>Configurações
+                                        </h6>
+                                    </li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.business-hours.index') }}">
+                                        <i class="fas fa-clock me-2 text-warning"></i>
+                                        <span>Horários de Funcionamento</span>
+                                        <span class="badge bg-warning text-dark ms-2 small">Novo</span>
+                                    </a></li>
+                                    
+                                    <li><hr class="dropdown-divider"></li>
+                                    
+                                    <!-- Vendas e Agendamentos -->
+                                    <li>
+                                        <h6 class="dropdown-header">
+                                            <i class="fas fa-business-time me-2"></i>Operações
+                                        </h6>
+                                    </li>
                                     <li><a class="dropdown-item" href="{{ route('petshop.orders') }}">
-                                        <i class="fas fa-shopping-bag me-2"></i>Pedidos
+                                        <i class="fas fa-shopping-bag me-2 text-success"></i>
+                                        <span>Pedidos</span>
+                                        @php
+                                            $pendingOrders = 0; // Aqui você calcularia pedidos pendentes
+                                        @endphp
+                                        @if($pendingOrders > 0)
+                                            <span class="badge bg-danger ms-2">{{ $pendingOrders }}</span>
+                                        @endif
                                     </a></li>
                                     <li><a class="dropdown-item" href="{{ route('petshop.appointments') }}">
-                                        <i class="fas fa-calendar me-2"></i>Agendamentos
+                                        <i class="fas fa-calendar me-2 text-primary"></i>
+                                        <span>Agendamentos</span>
+                                        @php
+                                            $todayAppointments = 0; // Aqui você calcularia agendamentos de hoje
+                                        @endphp
+                                        @if($todayAppointments > 0)
+                                            <span class="badge bg-info ms-2">{{ $todayAppointments }}</span>
+                                        @endif
                                     </a></li>
+                                    
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item text-success" href="{{ route('analytics.petshop') }}">
-                                        <i class="fas fa-chart-pie me-2"></i>Relatórios e Gráficos
+                                    
+                                    <!-- Links Rápidos -->
+                                    <li>
+                                        <h6 class="dropdown-header">
+                                            <i class="fas fa-rocket me-2"></i>Ações Rápidas
+                                        </h6>
+                                    </li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.products.create') }}">
+                                        <i class="fas fa-plus me-2 text-success"></i>Novo Produto
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.services.create') }}">
+                                        <i class="fas fa-plus me-2 text-warning"></i>Novo Serviço
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('petshop.employees.create') }}">
+                                        <i class="fas fa-user-plus me-2 text-info"></i>Novo Funcionário
                                     </a></li>
                                 </ul>
                             </li>

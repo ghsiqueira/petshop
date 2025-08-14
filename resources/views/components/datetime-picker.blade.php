@@ -19,13 +19,20 @@
             <input type="text" 
                    class="form-control custom-date-input @error($dateId) is-invalid @enderror" 
                    id="{{ $dateId }}" 
-                   name="{{ $dateId }}"
+                   name="{{ $dateId }}_display"
                    value="{{ $dateValue }}"
                    placeholder="Clique para selecionar data..."
                    {{ $required ? 'required' : '' }}
                    {{ $disabled ? 'disabled' : '' }}
                    autocomplete="off"
                    readonly>
+            
+            <!-- Input hidden com formato ISO para o Laravel -->
+            <input type="hidden" 
+                   name="{{ $dateId }}" 
+                   id="{{ $dateId }}_hidden"
+                   value="">
+            
             <i class="fas fa-calendar-alt date-icon"></i>
             
             <div class="custom-calendar-popup" id="cal_{{ $dateId }}">
@@ -60,7 +67,7 @@
                    id="{{ $timeId }}" 
                    name="{{ $timeId }}"
                    value="{{ $timeValue }}"
-                   placeholder="Clique para selecionar horário..."
+                   placeholder="Selecione uma data primeiro..."
                    {{ $required ? 'required' : '' }}
                    {{ $disabled ? 'disabled' : '' }}
                    autocomplete="off"
@@ -68,8 +75,16 @@
             <i class="fas fa-clock time-icon"></i>
             
             <div class="custom-time-popup" id="time_{{ $timeId }}">
-                <div class="time-header">Horários Disponíveis</div>
-                <div class="time-grid"></div>
+                <div class="time-header">
+                    <i class="fas fa-clock me-2"></i>Horários Disponíveis
+                </div>
+                <div class="time-grid">
+                    <div class="p-3 text-center text-muted">
+                        <i class="fas fa-calendar-day fa-2x mb-2 d-block text-info"></i>
+                        <strong>Selecione uma data primeiro</strong><br>
+                        <small>Os horários serão carregados automaticamente</small>
+                    </div>
+                </div>
             </div>
         </div>
         @error($timeId)
@@ -210,35 +225,35 @@
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease;
-    color: #2c3e50 !important; /* COR ESCURA PARA OS NÚMEROS */
+    color: #2c3e50 !important;
 }
 
 .calendar-day:hover:not(.disabled):not(.other-month) {
-    background: #f8f9fc;
+    background: #f8f9fc !important;
     transform: scale(1.1);
-    color: #4e73df !important; /* COR AZUL NO HOVER */
+    color: #4e73df !important;
 }
 
 .calendar-day.today {
-    background: #1cc88a;
-    color: white !important; /* BRANCO NO DIA DE HOJE */
+    background: #1cc88a !important;
+    color: white !important;
     font-weight: 600;
 }
 
 .calendar-day.selected {
     background: #4e73df !important;
-    color: white !important; /* BRANCO NO DIA SELECIONADO */
+    color: white !important;
     font-weight: 600;
 }
 
 .calendar-day.disabled {
-    color: #bdc3c7 !important; /* CINZA CLARO PARA DIAS DESABILITADOS */
+    color: #bdc3c7 !important;
     cursor: not-allowed;
     opacity: 0.5;
 }
 
 .calendar-day.other-month {
-    color: #bdc3c7 !important; /* CINZA CLARO PARA OUTROS MESES */
+    color: #bdc3c7 !important;
     opacity: 0.6;
 }
 
@@ -259,7 +274,7 @@
     font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    color: #5a5c69 !important; /* COR ESCURA PARA O TEXTO */
+    color: #5a5c69 !important;
     font-weight: 500;
 }
 
@@ -286,7 +301,7 @@
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     z-index: 1050;
-    max-height: 280px;
+    max-height: 320px;
     overflow: hidden;
     display: none;
 }
@@ -302,11 +317,11 @@
     border-bottom: 1px solid #eee;
     font-weight: 600;
     font-size: 14px;
-    color: #5a5c69;
+    color: #5a5c69 !important;
 }
 
 .time-grid {
-    max-height: 200px;
+    max-height: 250px;
     overflow-y: auto;
 }
 
@@ -321,18 +336,18 @@
     font-size: 14px;
     border-bottom: 1px solid #f8f9fc;
     transition: all 0.2s ease;
-    color: #2c3e50 !important; /* COR ESCURA PARA OS HORÁRIOS */
+    color: #2c3e50 !important;
     font-weight: 500;
 }
 
 .time-option:hover {
     background: #4e73df !important;
-    color: white !important; /* BRANCO NO HOVER */
+    color: white !important;
 }
 
 .time-option.selected {
     background: #4e73df !important;
-    color: white !important; /* BRANCO QUANDO SELECIONADO */
+    color: white !important;
     font-weight: 600;
 }
 
@@ -340,6 +355,25 @@
     content: ' ✓';
     float: right;
     color: white !important;
+}
+
+.time-loading,
+.time-empty,
+.time-error {
+    padding: 20px;
+    text-align: center;
+}
+
+.time-loading {
+    color: #858796;
+}
+
+.time-empty {
+    color: #6c757d;
+}
+
+.time-error {
+    color: #e74a3b;
 }
 
 /* ANIMATIONS */
@@ -354,6 +388,24 @@
     }
 }
 
+/* SCROLL CUSTOMIZADO */
+.time-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.time-grid::-webkit-scrollbar-track {
+    background: #f8f9fc;
+}
+
+.time-grid::-webkit-scrollbar-thumb {
+    background: #d1d3e2;
+    border-radius: 3px;
+}
+
+.time-grid::-webkit-scrollbar-thumb:hover {
+    background: #858796;
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
     .custom-calendar-popup,
@@ -366,69 +418,18 @@
         max-width: 320px !important;
     }
 }
-
-/* FORÇA DE CORES PARA GARANTIR VISIBILIDADE */
-.calendar-day {
-    color: #2c3e50 !important;
-    background-color: transparent !important;
-}
-
-.calendar-day.today {
-    background-color: #1cc88a !important;
-    color: white !important;
-}
-
-.calendar-day.selected {
-    background-color: #4e73df !important;
-    color: white !important;
-}
-
-.calendar-day.disabled {
-    color: #bdc3c7 !important;
-    background-color: transparent !important;
-}
-
-.calendar-day.other-month {
-    color: #bdc3c7 !important;
-    background-color: transparent !important;
-}
-
-.calendar-day:hover:not(.disabled):not(.other-month) {
-    background-color: #f8f9fc !important;
-    color: #4e73df !important;
-}
-
-/* FORÇA DE CORES PARA OS HORÁRIOS TAMBÉM */
-.time-option {
-    color: #2c3e50 !important;
-    background-color: transparent !important;
-}
-
-.time-option:hover {
-    background-color: #4e73df !important;
-    color: white !important;
-}
-
-.time-option.selected {
-    background-color: #4e73df !important;
-    color: white !important;
-}
-
-.time-header {
-    color: #5a5c69 !important;
-    background-color: #f8f9fc !important;
-}
 </style>
 @endpush
 
 @push('scripts')
 <script>
-// === SIMPLE DATE TIME PICKER ===
-class SimpleDateTimePicker {
+// === IMPROVED DATE TIME PICKER WITH DYNAMIC HOURS ===
+class DynamicDateTimePicker {
     constructor() {
         this.currentMonth = new Date().getMonth();
         this.currentYear = new Date().getFullYear();
         this.selectedDate = null;
+        this.selectedTime = null;
         this.activeCalendar = null;
         this.activeTimeContainer = null;
         
@@ -441,98 +442,123 @@ class SimpleDateTimePicker {
     }
 
     init() {
-        console.log('Inicializando SimpleDateTimePicker...');
+        console.log('🕐 Inicializando DynamicDateTimePicker...');
         this.setupDatePickers();
         this.setupTimePickers();
         this.setupClickOutside();
-        console.log('SimpleDateTimePicker inicializado!');
+        this.setupServiceWatchers();
+        console.log('✅ DynamicDateTimePicker inicializado!');
     }
 
     setupDatePickers() {
         const containers = document.querySelectorAll('.custom-date-container');
-        console.log('Encontrados', containers.length, 'date containers');
+        console.log('📅 Encontrados', containers.length, 'date containers');
         
         containers.forEach(container => {
             const input = container.querySelector('.custom-date-input');
             const popup = container.querySelector('.custom-calendar-popup');
             
             if (input && popup) {
-                // Event listener único para o input
                 input.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     this.toggleCalendar(container, popup);
                 });
 
-                // Configurar botões de navegação
-                const prevBtn = popup.querySelector('.prev-btn');
-                const nextBtn = popup.querySelector('.next-btn');
-                const todayBtn = popup.querySelector('.btn-today');
-                const clearBtn = popup.querySelector('.btn-clear');
-
-                if (prevBtn) {
-                    prevBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.changeMonth(-1);
-                    });
-                }
-
-                if (nextBtn) {
-                    nextBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.changeMonth(1);
-                    });
-                }
-
-                if (todayBtn) {
-                    todayBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.selectToday(container);
-                    });
-                }
-
-                if (clearBtn) {
-                    clearBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.clearDate(container);
-                    });
-                }
-
-                console.log('Date picker configurado para', input.id);
+                this.setupCalendarNavigation(popup);
+                console.log('📅 Date picker configurado para', input.id);
             }
         });
     }
 
     setupTimePickers() {
         const containers = document.querySelectorAll('.custom-time-container');
-        console.log('Encontrados', containers.length, 'time containers');
+        console.log('🕐 Encontrados', containers.length, 'time containers');
         
         containers.forEach(container => {
             const input = container.querySelector('.custom-time-input');
             const popup = container.querySelector('.custom-time-popup');
             
             if (input && popup) {
-                // Event listener único para o input
                 input.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     this.toggleTimePicker(container, popup);
                 });
 
-                // Gerar horários
-                this.generateTimeOptions(popup);
-
-                console.log('Time picker configurado para', input.id);
+                console.log('🕐 Time picker configurado para', input.id);
             }
         });
     }
 
+    setupServiceWatchers() {
+        // Observar mudanças no serviço e petshop para atualizar horários
+        const serviceSelect = document.getElementById('service_id');
+        const petshopSelect = document.getElementById('petshop_id');
+        const dateInput = document.querySelector('.custom-date-input');
+
+        if (serviceSelect) {
+            serviceSelect.addEventListener('change', () => {
+                this.resetTimeField();
+                console.log('🔄 Serviço alterado, horários resetados');
+            });
+        }
+
+        if (petshopSelect) {
+            petshopSelect.addEventListener('change', () => {
+                this.resetTimeField();
+                console.log('🔄 Pet shop alterado, horários resetados');
+            });
+        }
+
+        if (dateInput) {
+            dateInput.addEventListener('change', () => {
+                this.resetTimeField();
+                console.log('🔄 Data alterada, horários serão recarregados');
+            });
+        }
+    }
+
+    setupCalendarNavigation(popup) {
+        const prevBtn = popup.querySelector('.prev-btn');
+        const nextBtn = popup.querySelector('.next-btn');
+        const todayBtn = popup.querySelector('.btn-today');
+        const clearBtn = popup.querySelector('.btn-clear');
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.changeMonth(-1);
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.changeMonth(1);
+            });
+        }
+
+        if (todayBtn) {
+            todayBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.selectToday();
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.clearDate();
+            });
+        }
+    }
+
     toggleCalendar(container, popup) {
-        // Fechar outros popups
         this.closeAllPopups();
         
         if (popup.classList.contains('show')) {
@@ -546,7 +572,6 @@ class SimpleDateTimePicker {
     }
 
     toggleTimePicker(container, popup) {
-        // Fechar outros popups
         this.closeAllPopups();
         
         if (popup.classList.contains('show')) {
@@ -555,6 +580,7 @@ class SimpleDateTimePicker {
         } else {
             popup.classList.add('show');
             this.activeTimeContainer = container;
+            this.loadAvailableHours(popup);
         }
     }
 
@@ -596,23 +622,19 @@ class SimpleDateTimePicker {
         const grid = popup.querySelector('.calendar-grid');
         
         if (!monthYear || !grid) {
-            console.error('Elementos do calendário não encontrados');
+            console.error('❌ Elementos do calendário não encontrados');
             return;
         }
 
-        // Atualizar header
         monthYear.textContent = `${this.monthNames[this.currentMonth]} ${this.currentYear}`;
-
-        // Limpar grid
         grid.innerHTML = '';
 
-        // Calcular primeiro dia e quantidade de dias
         const firstDay = new Date(this.currentYear, this.currentMonth, 1);
         const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
         const daysInMonth = lastDay.getDate();
         const startingDay = firstDay.getDay();
 
-        // Adicionar dias do mês anterior (para completar a primeira semana)
+        // Dias do mês anterior
         const prevMonth = new Date(this.currentYear, this.currentMonth - 1, 0);
         for (let i = startingDay - 1; i >= 0; i--) {
             const day = prevMonth.getDate() - i;
@@ -621,7 +643,7 @@ class SimpleDateTimePicker {
             grid.appendChild(button);
         }
 
-        // Adicionar dias do mês atual
+        // Dias do mês atual
         const today = new Date();
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(this.currentYear, this.currentMonth, day);
@@ -645,9 +667,9 @@ class SimpleDateTimePicker {
             grid.appendChild(button);
         }
 
-        // Adicionar dias do próximo mês (para completar a última semana)
+        // Dias do próximo mês
         const totalCells = grid.children.length;
-        const remainingCells = 42 - totalCells; // 6 semanas * 7 dias
+        const remainingCells = 42 - totalCells;
         
         for (let day = 1; day <= remainingCells; day++) {
             const button = this.createDayButton(day, true, false);
@@ -655,7 +677,7 @@ class SimpleDateTimePicker {
             grid.appendChild(button);
         }
 
-        console.log('Calendário renderizado para', this.monthNames[this.currentMonth], this.currentYear);
+        console.log('📅 Calendário renderizado para', this.monthNames[this.currentMonth], this.currentYear);
     }
 
     createDayButton(day, isOtherMonth, isDisabled) {
@@ -677,39 +699,22 @@ class SimpleDateTimePicker {
         
         const container = this.activeCalendar.closest('.custom-date-container');
         const input = container.querySelector('.custom-date-input');
+        const hiddenInput = container.querySelector('input[type="hidden"]');
         
         if (input) {
-            // Formato para exibição (brasileiro)
             const displayDate = this.formatDate(date);
+            const isoDate = this.formatDateISO(date);
+            
             input.value = displayDate;
-            
-            // ADICIONAR CAMPO HIDDEN COM FORMATO CORRETO PARA O LARAVEL
-            let hiddenInput = container.querySelector('input[type="hidden"]');
-            if (!hiddenInput) {
-                hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = input.name; // Mesmo name do input principal
-                container.appendChild(hiddenInput);
-                
-                // Mudar o name do input principal para não conflitar
-                input.name = input.name + '_display';
+            if (hiddenInput) {
+                hiddenInput.value = isoDate;
             }
-            
-            // Formato ISO para o Laravel (Y-m-d)
-            const isoDate = date.getFullYear() + '-' + 
-                          String(date.getMonth() + 1).padStart(2, '0') + '-' + 
-                          String(date.getDate()).padStart(2, '0');
-            hiddenInput.value = isoDate;
-            
-            console.log('Data para exibição:', displayDate);
-            console.log('Data para Laravel:', isoDate);
             
             // Atualizar visual do calendário
             this.activeCalendar.querySelectorAll('.calendar-day').forEach(btn => {
                 btn.classList.remove('selected');
             });
             
-            // Marcar dia selecionado
             const dayButtons = this.activeCalendar.querySelectorAll('.calendar-day');
             dayButtons.forEach(btn => {
                 if (btn.textContent == date.getDate() && !btn.classList.contains('other-month')) {
@@ -717,68 +722,121 @@ class SimpleDateTimePicker {
                 }
             });
             
-            // Fechar calendário
             this.closeAllPopups();
-            
-            // Disparar evento change
             input.dispatchEvent(new Event('change', { bubbles: true }));
             
-            console.log('Data selecionada:', displayDate);
+            // Resetar campo de horário para forçar novo carregamento
+            this.resetTimeField();
+            
+            console.log('📅 Data selecionada:', displayDate, '(ISO:', isoDate, ')');
         }
     }
 
-    selectToday(container) {
+    selectToday() {
         const today = new Date();
         this.currentMonth = today.getMonth();
         this.currentYear = today.getFullYear();
         this.selectDate(today);
     }
 
-    clearDate(container) {
+    clearDate() {
+        if (!this.activeCalendar) return;
+        
+        const container = this.activeCalendar.closest('.custom-date-container');
         const input = container.querySelector('.custom-date-input');
         const hiddenInput = container.querySelector('input[type="hidden"]');
         
         if (input) {
             input.value = '';
+            if (hiddenInput) {
+                hiddenInput.value = '';
+            }
             input.dispatchEvent(new Event('change', { bubbles: true }));
+            this.closeAllPopups();
+            this.resetTimeField();
+            console.log('📅 Data limpa');
         }
-        
-        if (hiddenInput) {
-            hiddenInput.value = '';
-        }
-        
-        this.closeAllPopups();
-        console.log('Data limpa');
     }
 
-    generateTimeOptions(popup) {
+    loadAvailableHours(popup) {
         const grid = popup.querySelector('.time-grid');
         if (!grid) return;
 
-        const times = [];
+        const serviceSelect = document.getElementById('service_id');
+        const petshopSelect = document.getElementById('petshop_id');
+        const dateInput = document.querySelector('input[type="hidden"][name*="date"]');
         
-        // Gerar horários de 8:00 às 17:30
-        for (let hour = 8; hour < 18; hour++) {
-            for (let minute = 0; minute < 60; minute += 30) {
-                const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                times.push(timeString);
-            }
+        if (!serviceSelect?.value || !petshopSelect?.value) {
+            grid.innerHTML = this.getTimeMessage('info', 'Selecione um serviço primeiro', 'fa-hand-point-up');
+            return;
         }
 
-        grid.innerHTML = times.map(time => 
-            `<button type="button" class="time-option" data-time="${time}">${time}</button>`
-        ).join('');
+        if (!dateInput?.value) {
+            grid.innerHTML = this.getTimeMessage('warning', 'Selecione uma data primeiro', 'fa-calendar-day');
+            return;
+        }
 
-        // Adicionar event listeners
-        grid.querySelectorAll('.time-option').forEach(option => {
-            option.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.selectTime(option.dataset.time, popup);
-            });
+        // Mostrar loading
+        grid.innerHTML = this.getTimeMessage('loading', 'Carregando horários disponíveis...', 'fa-spinner fa-spin');
+
+        const url = `/api/petshops/${petshopSelect.value}/available-slots?service_id=${serviceSelect.value}&date=${dateInput.value}`;
+        
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.slots && data.slots.length > 0) {
+                grid.innerHTML = data.slots.map(time => 
+                    `<button type="button" class="time-option" data-time="${time}">
+                        <i class="fas fa-clock me-2"></i>${time}
+                    </button>`
+                ).join('');
+
+                grid.querySelectorAll('.time-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.selectTime(option.dataset.time, popup);
+                    });
+                });
+
+                console.log('🕐', data.slots.length, 'horários disponíveis carregados para', data.service);
+            } else {
+                grid.innerHTML = this.getTimeMessage('danger', 'Nenhum horário disponível', 'fa-calendar-times', 'Tente outra data ou entre em contato');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erro ao carregar horários:', error);
+            grid.innerHTML = this.getTimeMessage('danger', 'Erro ao carregar horários', 'fa-exclamation-triangle', 'Tente novamente em alguns instantes');
         });
+    }
 
-        console.log('Opções de horário geradas:', times.length);
+    getTimeMessage(type, title, icon, subtitle = '') {
+        const colors = {
+            loading: 'text-info',
+            info: 'text-info', 
+            warning: 'text-warning',
+            danger: 'text-danger'
+        };
+
+        return `
+            <div class="time-${type} ${colors[type]}">
+                <i class="fas ${icon} fa-2x mb-2 d-block"></i>
+                <strong>${title}</strong>
+                ${subtitle ? `<br><small>${subtitle}</small>` : ''}
+            </div>
+        `;
     }
 
     selectTime(time, popup) {
@@ -788,20 +846,23 @@ class SimpleDateTimePicker {
         if (input) {
             input.value = time;
             
-            // Atualizar visual
             popup.querySelectorAll('.time-option').forEach(opt => {
                 opt.classList.remove('selected');
             });
             
             popup.querySelector(`[data-time="${time}"]`).classList.add('selected');
-            
-            // Fechar popup
             this.closeAllPopups();
-            
-            // Disparar evento change
             input.dispatchEvent(new Event('change', { bubbles: true }));
             
-            console.log('Horário selecionado:', time);
+            console.log('🕐 Horário selecionado:', time);
+        }
+    }
+
+    resetTimeField() {
+        const timeInput = document.querySelector('.custom-time-input');
+        if (timeInput) {
+            timeInput.value = '';
+            timeInput.placeholder = 'Selecione uma data primeiro...';
         }
     }
 
@@ -810,6 +871,13 @@ class SimpleDateTimePicker {
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
+    }
+
+    formatDateISO(date) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     isSameDate(date1, date2) {
@@ -821,11 +889,10 @@ class SimpleDateTimePicker {
 
 // INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM carregado, inicializando date/time picker...');
+    console.log('🚀 DOM carregado, inicializando dynamic date/time picker...');
     
-    // Aguardar um momento para garantir que todos os elementos estão prontos
     setTimeout(() => {
-        window.dateTimePicker = new SimpleDateTimePicker();
+        window.dynamicDateTimePicker = new DynamicDateTimePicker();
     }, 150);
 });
 </script>
