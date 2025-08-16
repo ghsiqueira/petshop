@@ -13,8 +13,9 @@ class BusinessHoursController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('role:petshop');
+        // Aplicar middleware apenas para métodos específicos, excluindo getAvailableSlots
+        $this->middleware('auth')->except(['getAvailableSlots']);
+        $this->middleware('role:petshop')->except(['getAvailableSlots']);
     }
 
     /**
@@ -70,6 +71,7 @@ class BusinessHoursController extends Controller
 
     /**
      * API para obter horários disponíveis para agendamento
+     * MÉTODO PÚBLICO - SEM AUTENTICAÇÃO REQUERIDA
      */
     public function getAvailableSlots(Request $request, $petshopId)
     {
@@ -141,36 +143,38 @@ class BusinessHoursController extends Controller
             $startTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $dayHours['open']);
             $endTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $dayHours['close']);
             
-            // Duração do slot (padrão do petshop)
-            $slotDuration = $petshop->slot_duration ?? 30;
+            // CORREÇÃO: Usar apenas slot_duration para intervalos, não somar buffer_time
+            $slotDuration = $petshop->slot_duration ?? 30; // Intervalo entre slots disponíveis
+            $serviceDuration = $service->duration_minutes ?? 30; // Duração real do serviço
+            $bufferTime = $service->buffer_time ?? 0; // Tempo extra após o serviço
             
-            // Duração total necessária (serviço + buffer)
-            $serviceDuration = $service->getTotalDuration();
-            
+            // Duração total que o serviço ocupa (para verificar conflitos)
+            $totalServiceTime = $serviceDuration + $bufferTime;
+
             $slots = [];
-            $current = $startTime->copy();
-            
+            $currentTime = $startTime->copy();
+
             // Se for hoje, começar a partir do horário atual + 1 hora
             if ($dateObj->isToday()) {
                 $minTime = Carbon::now()->addHour()->roundUpToNearestMinutes($slotDuration);
-                if ($current->lt($minTime)) {
-                    $current = $minTime->copy();
+                if ($currentTime->lt($minTime)) {
+                    $currentTime = $minTime->copy();
                 }
             }
-            
-            while ($current->copy()->addMinutes($serviceDuration)->lte($endTime)) {
+
+            while ($currentTime->copy()->addMinutes($totalServiceTime)->lte($endTime)) {
+                $timeString = $currentTime->format('H:i');
+                
                 // Verificar se não está no horário de almoço
-                if ($this->isInLunchBreak($current, $petshop)) {
-                    $current->addMinutes($slotDuration);
-                    continue;
+                if (!$this->isInLunchBreak($currentTime, $petshop)) {
+                    // Verificar se o slot não está ocupado
+                    if (!$this->isSlotOccupied($currentTime, $service, $totalServiceTime)) {
+                        $slots[] = $timeString;
+                    }
                 }
-
-                // Verificar se o horário não está ocupado
-                if (!$this->isSlotOccupied($current, $service, $serviceDuration)) {
-                    $slots[] = $current->format('H:i');
-                }
-
-                $current->addMinutes($slotDuration);
+                
+                // CORREÇÃO: Avançar apenas pelo slot_duration, não pelo tempo total do serviço
+                $currentTime->addMinutes($slotDuration);
             }
 
             return $slots;

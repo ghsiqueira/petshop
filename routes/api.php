@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\Api\SearchApiController;
+use App\Http\Controllers\Petshop\BusinessHoursController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,6 +19,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // Rotas para o formulário de agendamento
 Route::get('/petshops/{petshop}/services', [ApiController::class, 'getServices']);
 Route::get('/petshops/{petshop}/employees', [ApiController::class, 'getEmployees']);
+
+// Rotas para o formulário de agendamento
+Route::get('/petshops/{petshop}/services', [ApiController::class, 'getServices']);
+Route::get('/petshops/{petshop}/employees', [ApiController::class, 'getEmployees']);
+
+// NOVA ROTA: Horários disponíveis para agendamento (sem autenticação)
+Route::get('/petshops/{petshopId}/available-slots', [BusinessHoursController::class, 'getAvailableSlots']);
 
 // Rotas de API para busca
 Route::prefix('search')->group(function () {
@@ -53,7 +61,7 @@ Route::middleware('auth')->prefix('cart')->group(function () {
     
     Route::get('/count', function() {
         // Simular contador do carrinho
-        // Implementar lógica real baseada no usuário autenticado
+        // Implementar lógica real baseado no usuário autenticado
         return response()->json(['count' => 0]);
     });
 });

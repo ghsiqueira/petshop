@@ -29,7 +29,12 @@ class Service extends Model
         'max_pets_per_session',
         'requires_appointment',
         'advance_booking_days',
-        'cancellation_hours'
+        'cancellation_hours',
+        // CAMPOS JÁ EXISTENTES NA MIGRAÇÃO
+        'available_hours',
+        'use_petshop_hours',
+        'available_days',
+        'buffer_time'
     ];
 
     protected $casts = [
@@ -40,7 +45,11 @@ class Service extends Model
         'requires_appointment' => 'boolean',
         'tags' => 'array',
         'images' => 'array',
-        'requirements' => 'array'
+        'requirements' => 'array',
+        // CASTS PARA CAMPOS JÁ EXISTENTES
+        'available_hours' => 'array',
+        'use_petshop_hours' => 'boolean',
+        'available_days' => 'array'
     ];
 
     protected $appends = [
@@ -116,7 +125,68 @@ class Service extends Model
         return ['name', 'description', 'category'];
     }
 
-    // Métodos auxiliares
+    // ============ NOVOS MÉTODOS PARA DISPONIBILIDADE ============
+
+    /**
+     * Verificar se o serviço está disponível em um dia da semana
+     */
+    public function isAvailableOnDay($dayOfWeek)
+    {
+        // Se usa horário do petshop, verificar disponibilidade no petshop
+        if ($this->use_petshop_hours || !$this->available_days) {
+            return $this->petshop->isOpenOnDay($dayOfWeek);
+        }
+
+        // Se tem dias específicos configurados
+        $day = strtolower($dayOfWeek);
+        return in_array($day, $this->available_days ?? []);
+    }
+
+    /**
+     * Obter horários específicos do serviço para um dia
+     */
+    public function getServiceHours($dayOfWeek)
+    {
+        // Se usa horário do petshop
+        if ($this->use_petshop_hours || !$this->available_hours) {
+            return $this->petshop->getOpeningHours($dayOfWeek);
+        }
+
+        // Se tem horários customizados
+        $day = strtolower($dayOfWeek);
+        if (!$this->isAvailableOnDay($day)) {
+            return null;
+        }
+
+        return $this->available_hours[$day] ?? null;
+    }
+
+    /**
+     * Configurar disponibilidade padrão (usa horários do petshop)
+     */
+    public function setDefaultAvailability()
+    {
+        $this->update([
+            'use_petshop_hours' => true,
+            'available_hours' => null,
+            'available_days' => null,
+            'buffer_time' => 0
+        ]);
+    }
+
+    /**
+     * Configurar horários customizados para o serviço
+     */
+    public function setCustomAvailability($hours, $days = null)
+    {
+        $this->update([
+            'use_petshop_hours' => false,
+            'available_hours' => $hours,
+            'available_days' => $days,
+        ]);
+    }
+
+    // Métodos auxiliares existentes
     public function updateRating()
     {
         $reviews = $this->reviews()->where('status', 'approved');
